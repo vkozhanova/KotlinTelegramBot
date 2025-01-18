@@ -15,8 +15,12 @@ fun main() {
 
     wordsFile.forEachLine { line ->
         val parts = line.split("|")
-        val word = Word(original = parts[0], translate = parts[1], correctAnswersCount = parts[2].toIntOrNull() ?: 0)
+        val word = Word(
+            original = parts[0],
+            translate = parts[1],
+            correctAnswersCount = parts.getOrNull(2)?.toIntOrNull() ?: 0
+        )
         dictionary.add(word)
     }
-dictionary.forEach { println(it) }
+    dictionary.forEach { println(it) }
 }
