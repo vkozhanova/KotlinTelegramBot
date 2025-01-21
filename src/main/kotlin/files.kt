@@ -6,6 +6,9 @@ data class Word(
     val correctAnswersCount: Int = 0
 )
 
+const val SCORE_LIMIT = 3
+const val PERCENT_MULTIPLIER = 100
+
 fun main() {
 
     val dictionary = loadDictionary()
@@ -22,9 +25,9 @@ fun main() {
             "1" -> println("Учить слова")
             "2" -> {
                 println("Статистика")
-                val learnedCount = dictionary.filter { it.correctAnswersCount >= 3 }.size
+                val learnedCount = dictionary.filter { it.correctAnswersCount >= SCORE_LIMIT }.size
                 val totalCount = dictionary.size
-                val percent = if (totalCount > 0) (learnedCount.toDouble() / totalCount * 100).toInt() else 0
+                val percent = if (totalCount > 0) (learnedCount.toDouble() / totalCount * PERCENT_MULTIPLIER).toInt() else 0
 
                 println("Выучено $learnedCount из $totalCount | $percent%")
                 println()
