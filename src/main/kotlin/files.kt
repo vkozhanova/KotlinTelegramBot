@@ -1,4 +1,5 @@
 import java.io.File
+import java.util.Dictionary
 
 data class Word(
     val original: String,
@@ -13,6 +14,7 @@ fun main() {
 
     val dictionary = loadDictionary()
 
+
     while (true) {
         println("Меню:")
         println("1 - Учить слова")
@@ -22,7 +24,8 @@ fun main() {
         val userChoice = readln()
 
         when (userChoice) {
-            "1" -> println("Учить слова")
+            "1" -> { println("Учить слова")
+            learnWords(dictionary)}
             "2" -> {
                 println("Статистика")
                 val learnedCount = dictionary.filter { it.correctAnswersCount >= SCORE_LIMIT }.size
@@ -44,6 +47,28 @@ fun main() {
             }
         }
     }
+}
+
+fun learnWords(dictionary: List<Word>) {
+
+    val notLearnedList = dictionary.filter { it.correctAnswersCount < SCORE_LIMIT }
+    if (notLearnedList.isEmpty()) {
+        println("Все слова в словаре выучены")
+        return
+    }
+
+    val questionWords = notLearnedList.shuffled().take(4)
+
+    val correctAnswer = questionWords.random()
+    val incorrectAnswers = notLearnedList.filter { it !=correctAnswer }.shuffled().take(3)
+    val variants = (incorrectAnswers + correctAnswer).shuffled()
+
+    println("${correctAnswer.original}:")
+    variants.forEachIndexed { index, word ->
+        println("${index + 1} - ${word.translate}")
+    }
+    val userInput = readln()
+
 }
 
 fun loadDictionary(): MutableList<Word> {
