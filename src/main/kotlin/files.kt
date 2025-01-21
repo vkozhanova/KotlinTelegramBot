@@ -8,6 +8,7 @@ data class Word(
 
 const val SCORE_LIMIT = 3
 const val PERCENT_MULTIPLIER = 100
+const val QUESTIONS_OPTIONS = 4
 
 fun main() {
 
@@ -56,7 +57,7 @@ fun learnWords(dictionary: List<Word>) {
         return
     }
 
-    val questionWords = notLearnedList.shuffled().take(4)
+    val questionWords = notLearnedList.shuffled().take(QUESTIONS_OPTIONS)
 
     val correctAnswer = questionWords.random()
     val incorrectAnswers = notLearnedList.filter { it !=correctAnswer }.shuffled().take(3)
