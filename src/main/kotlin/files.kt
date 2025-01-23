@@ -53,44 +53,52 @@ fun main() {
 }
 
 fun learnWords(dictionary: MutableList<Word>) {
+    while (true) {
 
-    val notLearnedList = dictionary.filter { it.correctAnswersCount < SCORE_LIMIT }
-    if (notLearnedList.isEmpty()) {
-        println("Все слова в словаре выучены")
-        return
-    }
-
-    val questionWords = notLearnedList.shuffled().take(QUESTIONS_OPTIONS)
-
-    val correctAnswer = questionWords.random()
-    val incorrectAnswers = notLearnedList.filter { it != correctAnswer }.shuffled().take(3)
-    val variants = (incorrectAnswers + correctAnswer).shuffled()
-
-    println("${correctAnswer.original}:")
-    variants.forEachIndexed { index, word ->
-        println("${index + 1} - ${word.translate}")
-    }
-    println("----------")
-    println("0 - Меню")
-
-    val userAnswerInput = readln().toIntOrNull()
-
-    if (userAnswerInput != null && userAnswerInput in 1..variants.size) {
-        if (userAnswerInput == 0) {
+        val notLearnedList = dictionary.filter { it.correctAnswersCount < SCORE_LIMIT }
+        if (notLearnedList.isEmpty()) {
+            println("Все слова в словаре выучены")
             return
         }
 
-        val selectedWord = variants[userAnswerInput - 1]
-        if (selectedWord.original == correctAnswer.original) {
-            println("Правильно!")
-            dictionary[dictionary.indexOf(correctAnswer)] =
-                correctAnswer.copy(correctAnswersCount = correctAnswer.correctAnswersCount + 1)
-            saveDictionary(dictionary)
-        } else {
-            println("Неправильно! ${correctAnswer.original} – это ${correctAnswer.translate}")
+        val questionWords = notLearnedList.shuffled().take(QUESTIONS_OPTIONS)
+
+        val correctAnswer = questionWords.random()
+        val incorrectAnswers = notLearnedList.filter { it != correctAnswer }.shuffled().take(3)
+        val variants = (incorrectAnswers + correctAnswer).shuffled()
+
+        println("${correctAnswer.original}:")
+        variants.forEachIndexed { index, word ->
+            println("${index + 1} - ${word.translate}")
         }
-    } else {
-        println("")
+        println("----------")
+        println("0 - Меню")
+
+        val userAnswerInput = readln().toIntOrNull()
+        if (userAnswerInput == null) {
+            println("Некорректный ввод. Введите число от 0 до ${variants.size}")
+            continue
+        }
+
+        if (userAnswerInput == 0) {
+            return
+
+        }
+
+        if (userAnswerInput in 1..variants.size) {
+
+            val selectedWord = variants[userAnswerInput - 1]
+            if (selectedWord.original == correctAnswer.original) {
+                println("Правильно!")
+                dictionary[dictionary.indexOf(correctAnswer)] =
+                    correctAnswer.copy(correctAnswersCount = correctAnswer.correctAnswersCount + 1)
+                saveDictionary(dictionary)
+            } else {
+                println("Неправильно! ${correctAnswer.original} – это ${correctAnswer.translate}")
+            }
+        } else {
+            println("Некорректный ввод. Введите число от 0 до ${variants.size}")
+        }
     }
 }
 
