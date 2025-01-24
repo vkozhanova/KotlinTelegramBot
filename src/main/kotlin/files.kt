@@ -30,13 +30,7 @@ fun main() {
 
             "2" -> {
                 println("Статистика")
-                val learnedCount = dictionary.filter { it.correctAnswersCount >= SCORE_LIMIT }.size
-                val totalCount = dictionary.size
-                val percent =
-                    if (totalCount > 0) (learnedCount.toDouble() / totalCount * PERCENT_MULTIPLIER).toInt() else 0
-
-                println("Выучено $learnedCount из $totalCount | $percent%")
-                println()
+                showStatistics(dictionary)
             }
 
             "0" -> {
@@ -73,6 +67,7 @@ fun learnWords(dictionary: MutableList<Word>) {
         }
         println("----------")
         println("0 - Меню")
+        println()
 
         val userAnswerInput = readln().toIntOrNull()
         if (userAnswerInput == null) {
@@ -80,26 +75,36 @@ fun learnWords(dictionary: MutableList<Word>) {
             continue
         }
 
-        if (userAnswerInput == 0) {
-            return
 
-        }
-
-        if (userAnswerInput in 1..variants.size) {
-
-            val selectedWord = variants[userAnswerInput - 1]
-            if (selectedWord.original == correctAnswer.original) {
-                println("Правильно!")
-                dictionary[dictionary.indexOf(correctAnswer)] =
-                    correctAnswer.copy(correctAnswersCount = correctAnswer.correctAnswersCount + 1)
-                saveDictionary(dictionary)
-            } else {
-                println("Неправильно! ${correctAnswer.original} – это ${correctAnswer.translate}")
+        when (userAnswerInput) {
+            0 -> return
+            in 1..variants.size -> {
+                val selectedWord = variants[userAnswerInput - 1]
+                if (selectedWord.original == correctAnswer.original) {
+                    println("Правильно!")
+                    dictionary[dictionary.indexOf(correctAnswer)] =
+                        correctAnswer.copy(correctAnswersCount = correctAnswer.correctAnswersCount + 1)
+                    saveDictionary(dictionary)
+                } else {
+                    println("Неправильно! ${correctAnswer.original} – это ${correctAnswer.translate}")
+                }
             }
-        } else {
-            println("Некорректный ввод. Введите число от 0 до ${variants.size}")
+            else -> {
+                println("Некорректный ввод. Введите число от 0 до ${variants.size}")
+            }
         }
+
     }
+}
+
+fun showStatistics(dictionary: List<Word>) {
+    val learnedCount = dictionary.filter { it.correctAnswersCount >= SCORE_LIMIT }.size
+    val totalCount = dictionary.size
+    val percent =
+        if (totalCount > 0) (learnedCount.toDouble() / totalCount * PERCENT_MULTIPLIER).toInt() else 0
+
+    println("Выучено $learnedCount из $totalCount | $percent%")
+    println()
 }
 
 fun loadDictionary(): MutableList<Word> {
