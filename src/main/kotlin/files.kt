@@ -21,7 +21,6 @@ fun main() {
         println("0 - Выход")
 
         val userChoice = readln()
-
         when (userChoice) {
             "1" -> {
                 println("Учить слова")
