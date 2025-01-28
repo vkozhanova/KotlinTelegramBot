@@ -76,8 +76,8 @@ class LearnWordsTrainer {
     private fun saveDictionary(dictionary: List<Word>) {
         val wordsFile = File("words.txt")
         wordsFile.printWriter().use { out ->
-            dictionary.forEach { word ->
-                out.println("${word.original}|${word.translate}|${word.correctAnswersCount}")
+            for (word in dictionary) {
+                wordsFile.appendText("${word.original}|${word.translate}|${word.correctAnswersCount}\n")
             }
         }
     }

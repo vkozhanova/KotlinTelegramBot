@@ -1,10 +1,10 @@
-hello|привет
-dog|собака
-cat|кошка
-good evening|добрый вечер
-house|дом
-circle| окружность
-ring|кольцо
-pattern|узор
-figure|фигура
-picture|картина
+hello|привет|0
+dog|собака|0
+cat|кошка|0
+good evening|добрый вечер|0
+house|дом|0
+circle|окружность|0
+ring|кольцо|0
+pattern|узор|0
+figure|фигура|0
+picture|картина|0

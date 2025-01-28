@@ -1,4 +1,5 @@
 package org.example
+
 import LearnWordsTrainer
 import Question
 
@@ -9,15 +10,15 @@ data class Word(
 )
 
 fun Question.asConsoleString(): String {
-val variants = this.variants
-    .mapIndexed { index: Int, word: Word -> "${index + 1} - ${word.translate}" }
-    .joinToString(separator = "\n")
+    val variants = this.variants
+        .mapIndexed { index: Int, word: Word -> "${index + 1} - ${word.translate}" }
+        .joinToString(separator = "\n")
     return "${this.correctAnswer.original}\n$variants\n0 - Выйти в меню"
 }
 
 fun main() {
 
-   val trainer = LearnWordsTrainer()
+    val trainer = LearnWordsTrainer()
 
     while (true) {
         println("Меню:")
@@ -68,6 +69,3 @@ fun main() {
         }
     }
 }
-
-
-
