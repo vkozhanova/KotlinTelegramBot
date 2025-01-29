@@ -16,7 +16,7 @@ fun Question.asConsoleString(): String {
 fun main() {
 
     val trainer = try {
-        LearnWordsTrainer(3, 4)
+        LearnWordsTrainer()
     } catch (e: FileNotFoundException) {
         println("Невозможно загрузить файл: файл не найден")
         return

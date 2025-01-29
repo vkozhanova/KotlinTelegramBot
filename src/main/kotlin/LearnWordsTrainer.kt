@@ -14,17 +14,15 @@ data class Question(
 )
 
 const val PERCENT_MULTIPLIER = 100
+const val LEARNED_ANSWER_COUNT = 3
+const val COUNT_OF_QUESTION_WORDS = 4
 
-class LearnWordsTrainer(
-    private val learnedAnswerCount: Int = 3,
-    private val countOfQuestionWords: Int = 4,
-
-    ) {
+class LearnWordsTrainer {
     private var question: Question? = null
     private val dictionary = loadDictionary()
 
     fun getStatistics(): Statistics {
-        val learnedCount = dictionary.filter { it.correctAnswersCount >= learnedAnswerCount }.size
+        val learnedCount = dictionary.filter { it.correctAnswersCount >= LEARNED_ANSWER_COUNT }.size
         val totalCount = dictionary.size
         val percent =
             if (totalCount > 0) (learnedCount.toDouble() / totalCount * PERCENT_MULTIPLIER).toInt() else 0
@@ -36,14 +34,14 @@ class LearnWordsTrainer(
     }
 
     fun getNextQuestion(): Question? {
-        val notLearnedList = dictionary.filter { it.correctAnswersCount < learnedAnswerCount }
+        val notLearnedList = dictionary.filter { it.correctAnswersCount < LEARNED_ANSWER_COUNT }
         if (notLearnedList.isEmpty()) return null
-        val questionWords = if (notLearnedList.size < countOfQuestionWords) {
-            val learnedList = dictionary.filter { it.correctAnswersCount >= learnedAnswerCount }.shuffled()
-            notLearnedList.shuffled().take(countOfQuestionWords) +
-                    learnedList.take(countOfQuestionWords - notLearnedList.size)
+        val questionWords = if (notLearnedList.size < COUNT_OF_QUESTION_WORDS) {
+            val learnedList = dictionary.filter { it.correctAnswersCount >= LEARNED_ANSWER_COUNT }.shuffled()
+            notLearnedList.shuffled().take(COUNT_OF_QUESTION_WORDS) +
+                    learnedList.take(COUNT_OF_QUESTION_WORDS - notLearnedList.size)
         } else {
-            notLearnedList.shuffled().take(countOfQuestionWords)
+            notLearnedList.shuffled().take(COUNT_OF_QUESTION_WORDS)
         }.shuffled()
         val correctAnswer = questionWords.random()
         question = Question(
