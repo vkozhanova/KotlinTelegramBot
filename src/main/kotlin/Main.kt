@@ -1,7 +1,4 @@
-package org.example
-
-import LearnWordsTrainer
-import Question
+import java.io.FileNotFoundException
 
 data class Word(
     val original: String,
@@ -18,7 +15,15 @@ fun Question.asConsoleString(): String {
 
 fun main() {
 
-    val trainer = LearnWordsTrainer()
+    val trainer = try {
+        LearnWordsTrainer()
+    } catch (e: FileNotFoundException) {
+        println("Невозможно загрузить файл: файл не найден")
+        return
+    } catch (e: Exception) {
+        println("Невозможно загрузить словарь: ${e.message}")
+        return
+    }
 
     while (true) {
         println("Меню:")
@@ -40,11 +45,17 @@ fun main() {
                         val userAnswerInput = readln().toIntOrNull()
                         if (userAnswerInput == 0) break
 
-                        if (trainer.checkAnswer(userAnswerInput?.minus(1))) {
+                        if (userAnswerInput == null || userAnswerInput < 0 || userAnswerInput > question.variants.size) {
+                            println("Некорректный ввод. Выберите значение от 1 до ${question.variants.size}")
+                            continue
+                        }
+
+                        if (trainer.checkAnswer(userAnswerInput.minus(1))) {
                             println("Правильно!")
                         } else {
                             println("Неправильно! ${question.correctAnswer.original} - это ${question.correctAnswer.translate}")
                         }
+
                     }
                 }
             }
