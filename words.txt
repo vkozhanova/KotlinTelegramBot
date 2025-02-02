@@ -8,3 +8,4 @@ ring|кольцо|0
 pattern|узор|0
 figure|фигура|0
 picture|картина|0
+
