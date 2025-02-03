@@ -12,9 +12,12 @@ fun main(args:Array<String>) {
         Thread.sleep(2000)
         val updates: String = getUpdates(botToken, updateId)
 
-        val startUpdateId = updates.lastIndexOf("update_id") + 11
+        val startUpdateId = updates.lastIndexOf("update_id")
         val endUpdateId = updates.lastIndexOf(",\n\"message\"")
-        val updateIdString = updates.substring(startUpdateId, endUpdateId)
+
+        if (startUpdateId == -1 || endUpdateId == -1) continue
+        val updateIdString = updates.substring(startUpdateId + 11, endUpdateId).trim()
+        updateId = updateIdString.toInt() + 1
 
         val startMessageIndex = updates.lastIndexOf("message_id\":") + 12
         val endMessageId = updates.indexOf(",", startMessageIndex)
@@ -46,7 +49,7 @@ fun main(args:Array<String>) {
                 "Message text: $text\n" +
                 "Message id: $messageId\n" +
                 "Date: $date\n" +
-                "Last update id: $updateIdString\n")
+               "Update id: $updateId\n")
 
     }
 }
