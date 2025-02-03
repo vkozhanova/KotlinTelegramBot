@@ -6,17 +6,56 @@ import java.net.http.HttpResponse
 fun main(args:Array<String>) {
 
     val botToken = args[0]
-    val urlGetMe = "https://api.telegram.org/bot$botToken/getMe"
-    val urlGetUpdates = "https://api.telegram.org/bot$botToken/getUpdates"
+    var updateId = 0
 
+    while (true) {
+        Thread.sleep(2000)
+        val updates: String = getUpdates(botToken, updateId)
 
+        val startUpdateId = updates.lastIndexOf("update_id") + 11
+        val endUpdateId = updates.lastIndexOf(",\n\"message\"")
+        val updateIdString = updates.substring(startUpdateId, endUpdateId)
+
+        val startMessageIndex = updates.lastIndexOf("message_id\":") + 12
+        val endMessageId = updates.indexOf(",", startMessageIndex)
+        val messageId = updates.substring(startMessageIndex, endMessageId).toInt()
+
+        val startName = updates.lastIndexOf("first_name\":\"") + 13
+        val endName = updates.indexOf("\"", startName)
+        val name = updates.substring(startName, endName)
+
+        val startLastName = updates.indexOf("last_name\":") + 12
+        val endLastName = updates.indexOf("\"", startLastName)
+        val lastName = updates.substring(startLastName, endLastName)
+
+        val startUserName = updates.indexOf("username\":") + 11
+        val endUserName = updates.indexOf("\"", startUserName)
+        val userName = updates.substring(startUserName, endUserName)
+
+        val startText = updates.lastIndexOf("\"text\":") + 8
+        val endText = updates.indexOf("\"", startText)
+        val text = updates.substring(startText, endText)
+
+        val startDate = updates.lastIndexOf("date\":") + 6
+        val endDate = updates.indexOf(",", startDate)
+        val date = updates.substring(startDate, endDate)
+
+        println("First name: $name\n" +
+                "Last name: $lastName\n" +
+                "User name: $userName\n" +
+                "Message text: $text\n" +
+                "Message id: $messageId\n" +
+                "Date: $date\n" +
+                "Last update id: $updateIdString\n")
+
+    }
+}
+
+fun getUpdates(botToken: String, updateId: Int): String {
+    val urlGetUpdates = "https://api.telegram.org/bot$botToken/getUpdates?offset=$updateId"
     val client: HttpClient = HttpClient.newBuilder().build()
-    val request0: HttpRequest = HttpRequest.newBuilder().uri(URI.create(urlGetMe)).build()
-    val request1: HttpRequest = HttpRequest.newBuilder().uri(URI.create(urlGetUpdates)).build()
+    val request: HttpRequest = HttpRequest.newBuilder().uri(URI.create(urlGetUpdates)).build()
+    val response: HttpResponse<String> = client.send(request, HttpResponse.BodyHandlers.ofString())
 
-    val response0: HttpResponse<String> = client.send(request0, HttpResponse.BodyHandlers.ofString())
-    val response1: HttpResponse<String> = client.send(request1, HttpResponse.BodyHandlers.ofString())
-    println(response0.body())
-    println(response1.body())
-
+    return response.body()
 }
