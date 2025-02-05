@@ -11,45 +11,56 @@ fun main(args:Array<String>) {
     while (true) {
         Thread.sleep(2000)
         val updates: String = getUpdates(botToken, updateId)
+        println(updates)
 
-        val startUpdateId = updates.lastIndexOf("update_id")
-        val endUpdateId = updates.lastIndexOf(",\n\"message\"")
+        val messageIdRegex = "\"update_id\":\\s*(\\d+)".toRegex()
+        val matchResult = messageIdRegex.find(updates)
+        val groups = matchResult?.groups
+        val updateIdResult = groups?.get(1)?.value?.toIntOrNull()
 
-        if (startUpdateId == -1 || endUpdateId == -1) continue
-        val updateIdString = updates.substring(startUpdateId + 11, endUpdateId).trim()
-        updateId = updateIdString.toInt() + 1
+        if (updateIdResult != null) {
+            updateId = updateIdResult + 1
+            println("Update Id: $updateIdResult")
+        } else {
+            println("нет ответа")
+            continue
+        }
 
-        val startMessageIndex = updates.lastIndexOf("message_id\":") + 12
-        val endMessageId = updates.indexOf(",", startMessageIndex)
-        val messageId = updates.substring(startMessageIndex, endMessageId).toInt()
+        val messageFirstNameRegex = "\"first_name\":\\s*\"([\\w]+)\"".toRegex()
+        val matchResultNames = messageFirstNameRegex.find(updates)
+        val namesGroups = matchResultNames?.groups
+        val firstName = namesGroups?.get(1)?.value
+        println("First name: $firstName")
 
-        val startName = updates.lastIndexOf("first_name\":\"") + 13
-        val endName = updates.indexOf("\"", startName)
-        val name = updates.substring(startName, endName)
+        val messageLastNameRegex = "\"last_name\":\\s*\"([\\w]+)\"".toRegex()
+        val matchResultLastNames = messageLastNameRegex.find(updates)
+        val lastNamesGroups = matchResultLastNames?.groups
+        val lastName = lastNamesGroups?.get(1)?.value
+        println("Last name: $lastName")
 
-        val startLastName = updates.indexOf("last_name\":") + 12
-        val endLastName = updates.indexOf("\"", startLastName)
-        val lastName = updates.substring(startLastName, endLastName)
+        val messageUsernameRegex = "\"username\":*\"([\\w\\d]+)\"".toRegex()
+        val matchResultUsernames = messageUsernameRegex.find(updates)
+        val usernamesGroups = matchResultUsernames?.groups
+        val username = usernamesGroups?.get(1)?.value
+        println("Username: $username")
 
-        val startUserName = updates.indexOf("username\":") + 11
-        val endUserName = updates.indexOf("\"", startUserName)
-        val userName = updates.substring(startUserName, endUserName)
+        val messageChatIdRegex = "\"chat\":\\s*\\{[^}]*\"id\":\\s*(\\d+)".toRegex()
+        val matchResultChatId = messageChatIdRegex.find(updates)
+        val chatIdGroups = matchResultChatId?.groups
+        val chatId = chatIdGroups?.get(1)?.value
+        println("Chat Id: $chatId")
 
-        val startText = updates.lastIndexOf("\"text\":") + 8
-        val endText = updates.indexOf("\"", startText)
-        val text = updates.substring(startText, endText)
+        val messageTextRegex = "\"text\":\\s*\"([^\"]*)\"".toRegex()
+        val matchResultText = messageTextRegex.find(updates)
+        val textGroups = matchResultText?.groups
+        val text = textGroups?.get(1)?.value
+        println("Text: $text")
 
-        val startDate = updates.lastIndexOf("date\":") + 6
-        val endDate = updates.indexOf(",", startDate)
-        val date = updates.substring(startDate, endDate)
-
-        println("First name: $name\n" +
-                "Last name: $lastName\n" +
-                "User name: $userName\n" +
-                "Message text: $text\n" +
-                "Message id: $messageId\n" +
-                "Date: $date\n" +
-               "Update id: $updateId\n")
+        val messageDateRegex = "\"date\":\\s*(\\d+)".toRegex()
+        val matchResultDate = messageDateRegex.find(updates)
+        val dataGroups = matchResultDate?.groups
+        val date = dataGroups?.get(1)?.value
+        println("Date: $date")
 
     }
 }
