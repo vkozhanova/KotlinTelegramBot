@@ -8,60 +8,50 @@ fun main(args:Array<String>) {
     val botToken = args[0]
     var updateId = 0
 
+    val messageChatIdRegex = "\"chat\":\\s*\\{[^}]*\"id\":\\s*(\\d+)".toRegex()
+    val messageIdRegex = "\"update_id\":\\s*(\\d+)".toRegex()
+    val messageFirstNameRegex = "\"first_name\":\\s*\"([\\w]+)\"".toRegex()
+    val messageLastNameRegex = "\"last_name\":\\s*\"([\\w]+)\"".toRegex()
+    val messageUsernameRegex = "\"username\":*\"([\\w\\d]+)\"".toRegex()
+    val messageTextRegex = "\"text\":\\s*\"([^\"]*)\"".toRegex()
+    val messageDateRegex = "\"date\":\\s*(\\d+)".toRegex()
+
     while (true) {
         Thread.sleep(2000)
         val updates: String = getUpdates(botToken, updateId)
         println(updates)
 
-        val messageIdRegex = "\"update_id\":\\s*(\\d+)".toRegex()
         val matchResult = messageIdRegex.find(updates)
         val groups = matchResult?.groups
-        val updateIdResult = groups?.get(1)?.value?.toIntOrNull()
+        val updateIdResult = groups?.get(1)?.value?.toIntOrNull()?.plus(1) ?: continue
 
-        if (updateIdResult != null) {
-            updateId = updateIdResult + 1
-            println("Update Id: $updateIdResult")
-        } else {
-            println("нет ответа")
-            continue
-        }
+        updateId = updateIdResult
+        println("Update Id: $updateIdResult")
 
-        val messageFirstNameRegex = "\"first_name\":\\s*\"([\\w]+)\"".toRegex()
-        val matchResultNames = messageFirstNameRegex.find(updates)
-        val namesGroups = matchResultNames?.groups
+        val namesGroups = messageFirstNameRegex.find(updates)?.groups
         val firstName = namesGroups?.get(1)?.value
         println("First name: $firstName")
 
-        val messageLastNameRegex = "\"last_name\":\\s*\"([\\w]+)\"".toRegex()
-        val matchResultLastNames = messageLastNameRegex.find(updates)
-        val lastNamesGroups = matchResultLastNames?.groups
+        val lastNamesGroups = messageLastNameRegex.find(updates)?.groups
         val lastName = lastNamesGroups?.get(1)?.value
         println("Last name: $lastName")
 
-        val messageUsernameRegex = "\"username\":*\"([\\w\\d]+)\"".toRegex()
-        val matchResultUsernames = messageUsernameRegex.find(updates)
-        val usernamesGroups = matchResultUsernames?.groups
+        val usernamesGroups = messageUsernameRegex.find(updates)?.groups
         val username = usernamesGroups?.get(1)?.value
         println("Username: $username")
 
-        val messageChatIdRegex = "\"chat\":\\s*\\{[^}]*\"id\":\\s*(\\d+)".toRegex()
-        val matchResultChatId = messageChatIdRegex.find(updates)
-        val chatIdGroups = matchResultChatId?.groups
+        val chatIdGroups = messageChatIdRegex.find(updates)?.groups
         val chatId = chatIdGroups?.get(1)?.value
         println("Chat Id: $chatId")
 
-        val messageTextRegex = "\"text\":\\s*\"([^\"]*)\"".toRegex()
-        val matchResultText = messageTextRegex.find(updates)
-        val textGroups = matchResultText?.groups
+        val textGroups = messageTextRegex.find(updates)?.groups
         val text = textGroups?.get(1)?.value
         println("Text: $text")
 
-        val messageDateRegex = "\"date\":\\s*(\\d+)".toRegex()
-        val matchResultDate = messageDateRegex.find(updates)
-        val dataGroups = matchResultDate?.groups
+
+        val dataGroups = messageDateRegex.find(updates)?.groups
         val date = dataGroups?.get(1)?.value
         println("Date: $date")
-
     }
 }
 
