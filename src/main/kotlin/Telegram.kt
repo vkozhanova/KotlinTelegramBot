@@ -1,9 +1,7 @@
-
-fun main(args:Array<String>) {
+fun main(args: Array<String>) {
 
     val botToken = args[0]
     var updateId = 0
-    val updateIds = mutableListOf<Int>()
 
     val messageIdRegex = "\"update_id\":\\s*(\\d+)".toRegex()
     val messageChatIdRegex = "\"chat\":\\s*\\{[^}]*\"id\":\\s*(\\d+)".toRegex()
@@ -13,7 +11,7 @@ fun main(args:Array<String>) {
 
     while (true) {
         Thread.sleep(2000)
-        val updates: String = telegramBotService.getUpdates(botToken, updateId)
+        val updates: String = telegramBotService.getUpdates(updateId)
         println(updates)
 
         val matchResult = messageIdRegex.find(updates)
@@ -21,17 +19,16 @@ fun main(args:Array<String>) {
         val updateIdResult = groups?.get(1)?.value?.toIntOrNull()?.plus(1) ?: continue
 
         updateId = updateIdResult
-        updateIds.add(updateId)
 
         val chatIdGroups = messageChatIdRegex.find(updates)?.groups
-        val chatId = chatIdGroups?.get(1)?.value?.toIntOrNull()
+        val chatId = chatIdGroups?.get(1)?.value?.toLongOrNull() ?: continue
 
         val textGroups = messageTextRegex.find(updates)?.groups
         val text = textGroups?.get(1)?.value
 
         if (text != null) {
-            if(text.lowercase() == "hello" && chatId != null) {
-                telegramBotService.sendMessage(botToken, chatId, text,)
+            if (text.lowercase() == "hello") {
+                telegramBotService.sendMessage(chatId, text)
                 println(text)
             }
         }
