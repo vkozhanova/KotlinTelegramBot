@@ -1,3 +1,8 @@
+
+const val STATISTICS_BUTTON = "statistics_clicked"
+const val LEARNING_BUTTON = "learn_words_clicked"
+
+
 fun main(args: Array<String>) {
 
     val botToken = args[0]
@@ -38,13 +43,13 @@ fun main(args: Array<String>) {
             }
         }
 
-        if (data?.lowercase() == "statistics_clicked") {
+        if (data?.lowercase() == STATISTICS_BUTTON) {
             val statistics = trainer.getStatistics()
             telegramBotService.sendMessage(chatId, "Выучено ${statistics.learnedCount} из ${statistics.totalCount} | ${statistics.percent}%")
             println("Statistics button clicked")
 
         }
-        if (data?.lowercase() == "learn_words_clicked") {
+        if (data?.lowercase() == LEARNING_BUTTON) {
             telegramBotService.sendMessage(chatId, "Изучение слов")
             println("Learning button clicked")
 
