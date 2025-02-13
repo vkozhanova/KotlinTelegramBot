@@ -11,8 +11,11 @@ data class Word(
 fun Question.asConsoleString(): String {
     val variants = this.variants
         .mapIndexed { index: Int, word: Word -> "${index + 1} - ${word.translate}" }
-        .joinToString(separator = "\n")
-    return "${this.correctAnswer.original}\n$variants\n0 - Выйти в меню"
+        .joinToString(separator = "\n",
+    prefix = "\n${this.correctAnswer.original}\n",
+    postfix = "\n----------\n 0 - Меню",)
+
+    return variants
 }
 
 class Statistics(
