@@ -2,6 +2,22 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.lang.IllegalStateException
 
+data class Word(
+    val original: String,
+    val translate: String,
+    var correctAnswersCount: Int = 0
+)
+
+fun Question.asConsoleString(): String {
+    val variants = this.variants
+        .mapIndexed { index: Int, word: Word -> "${index + 1} - ${word.translate}" }
+        .joinToString(separator = "\n",
+    prefix = "\n${this.correctAnswer.original}\n",
+    postfix = "\n----------\n 0 - Меню",)
+
+    return variants
+}
+
 class Statistics(
     val learnedCount: Int,
     val totalCount: Int,
@@ -95,7 +111,6 @@ class LearnWordsTrainer {
             }
         }
     }
-
 }
 
 
