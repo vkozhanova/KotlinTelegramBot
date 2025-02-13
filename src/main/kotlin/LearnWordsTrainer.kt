@@ -59,6 +59,7 @@ class LearnWordsTrainer {
         } else {
             notLearnedList.shuffled().take(COUNT_OF_QUESTION_WORDS)
         }.shuffled()
+
         val correctAnswer = questionWords.random()
         question = Question(
             variants = questionWords,
