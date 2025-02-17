@@ -1,6 +1,5 @@
 const val STATISTICS_BUTTON = "statistics_clicked"
 const val LEARNING_BUTTON = "learn_words_clicked"
-
 fun main(args: Array<String>) {
 
     val botToken = args[0]
