@@ -1,5 +1,6 @@
 const val STATISTICS_BUTTON = "statistics_clicked"
 const val LEARNING_BUTTON = "learn_words_clicked"
+
 fun main(args: Array<String>) {
 
     val botToken = args[0]
@@ -47,9 +48,8 @@ fun main(args: Array<String>) {
 
         }
         if (data?.lowercase() == LEARNING_BUTTON) {
-            telegramBotService.sendMessage(chatId, "Изучение слов")
+          telegramBotService.checkNextQuestionAndSend(trainer, telegramBotService, chatId)
             println("Learning button clicked")
-
         }
     }
 }

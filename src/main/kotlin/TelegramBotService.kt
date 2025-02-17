@@ -6,6 +6,7 @@ import java.net.http.HttpResponse
 import java.nio.charset.StandardCharsets
 
 const val BASE_URL = "https://api.telegram.org/bot"
+const val CALLBACK_DATA_ANSWER_PREFIX = "answer_"
 
 class TelegramBotService(private val botToken: String) {
     private val client = HttpClient.newBuilder().build()
@@ -59,5 +60,43 @@ class TelegramBotService(private val botToken: String) {
             .build()
         val response: HttpResponse<String> = client.send(request, HttpResponse.BodyHandlers.ofString())
         return response.body()
+    }
+
+    private fun sendQuestion(chatId: Long, question: Question): String? {
+        val keyboard = question.variants.mapIndexed { index, word ->
+            """
+              {
+               "text": "${word.translate}" ,
+                    "callback_data": "$CALLBACK_DATA_ANSWER_PREFIX$index"
+              }"""
+        }.joinToString(separator = ",", prefix = "[", postfix = "]")
+             val messageBody = """
+                 {
+            "chat_id": $chatId,
+            "text": "Переведите слово: ${question.correctAnswer.original}",
+            "reply_markup": {
+            "inline_keyboard": [$keyboard]
+            }
+            } 
+             """.trimIndent()
+        val request: HttpRequest = HttpRequest.newBuilder()
+            .uri(URI.create("$BASE_URL$botToken/sendMessage"))
+            .header("Content-type", "application/json")
+            .POST(HttpRequest.BodyPublishers.ofString(messageBody))
+            .build()
+        return client.send(request, HttpResponse.BodyHandlers.ofString()).body()
+    }
+
+    fun checkNextQuestionAndSend(
+        trainer: LearnWordsTrainer,
+        telegramBotService: TelegramBotService,
+        chatId: Long
+    ) {
+        val nextQuestion = trainer.getNextQuestion()
+        if (nextQuestion == null) {
+            telegramBotService.sendMessage(chatId, "Все слова в словаре выучены.")
+        } else {
+            telegramBotService.sendQuestion(chatId, nextQuestion )
+        }
     }
 }
