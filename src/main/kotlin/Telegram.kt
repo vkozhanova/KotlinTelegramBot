@@ -1,20 +1,17 @@
-
 const val STATISTICS_BUTTON = "statistics_clicked"
 const val LEARNING_BUTTON = "learn_words_clicked"
-
-
 fun main(args: Array<String>) {
 
     val botToken = args[0]
     var updateId = 0
 
+    val telegramBotService = TelegramBotService(botToken)
+    val trainer = LearnWordsTrainer()
+
     val messageIdRegex = "\"update_id\":\\s*(\\d+)".toRegex()
     val messageChatIdRegex = "\"chat\":\\s*\\{[^}]*\"id\":\\s*(\\d+)".toRegex()
     val messageTextRegex = "\"text\":\\s*\"([^\"]*)\"".toRegex()
     val messageDataRegex = "\"data\":\\s*\"([^\"]*)\"".toRegex()
-
-    val telegramBotService = TelegramBotService(botToken)
-    val trainer = LearnWordsTrainer()
 
     while (true) {
         Thread.sleep(2000)

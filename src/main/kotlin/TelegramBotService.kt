@@ -53,7 +53,6 @@ class TelegramBotService(private val botToken: String) {
         """.trimIndent()
 
         val client: HttpClient = HttpClient.newBuilder().build()
-
         val request: HttpRequest = HttpRequest.newBuilder().uri(URI.create(sendMessage))
             .header("Content-type", "application/json")
             .POST(HttpRequest.BodyPublishers.ofString(sendMenuBody))
