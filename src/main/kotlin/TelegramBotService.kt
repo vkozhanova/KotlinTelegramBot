@@ -62,7 +62,7 @@ class TelegramBotService(private val botToken: String) {
         return response.body()
     }
 
-    private fun sendQuestion(chatId: Long, question: Question): String? {
+    fun sendQuestion(chatId: Long, question: Question): String? {
         val keyboard = question.variants.mapIndexed { index, word ->
             """
               {
@@ -85,18 +85,5 @@ class TelegramBotService(private val botToken: String) {
             .POST(HttpRequest.BodyPublishers.ofString(messageBody))
             .build()
         return client.send(request, HttpResponse.BodyHandlers.ofString()).body()
-    }
-
-    fun checkNextQuestionAndSend(
-        trainer: LearnWordsTrainer,
-        telegramBotService: TelegramBotService,
-        chatId: Long
-    ) {
-        val nextQuestion = trainer.getNextQuestion()
-        if (nextQuestion == null) {
-            telegramBotService.sendMessage(chatId, "Все слова в словаре выучены.")
-        } else {
-            telegramBotService.sendQuestion(chatId, nextQuestion )
-        }
     }
 }

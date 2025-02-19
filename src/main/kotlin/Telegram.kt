@@ -14,6 +14,19 @@ fun main(args: Array<String>) {
     val messageTextRegex = "\"text\":\\s*\"([^\"]*)\"".toRegex()
     val messageDataRegex = "\"data\":\\s*\"([^\"]*)\"".toRegex()
 
+    fun checkNextQuestionAndSend(
+        trainer: LearnWordsTrainer,
+        telegramBotService: TelegramBotService,
+        chatId: Long
+    ) {
+        val nextQuestion = trainer.getNextQuestion()
+        if (nextQuestion == null) {
+            telegramBotService.sendMessage(chatId, "Все слова в словаре выучены.")
+        } else {
+            telegramBotService.sendQuestion(chatId, nextQuestion )
+        }
+    }
+
     while (true) {
         Thread.sleep(2000)
         val updates: String = telegramBotService.getUpdates(updateId)
@@ -48,7 +61,7 @@ fun main(args: Array<String>) {
 
         }
         if (data?.lowercase() == LEARNING_BUTTON) {
-          telegramBotService.checkNextQuestionAndSend(trainer, telegramBotService, chatId)
+          checkNextQuestionAndSend(trainer, telegramBotService, chatId)
             println("Learning button clicked")
         }
     }
