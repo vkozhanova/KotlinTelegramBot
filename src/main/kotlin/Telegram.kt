@@ -1,5 +1,6 @@
 const val STATISTICS_BUTTON = "statistics_clicked"
 const val LEARNING_BUTTON = "learn_words_clicked"
+
 fun main(args: Array<String>) {
 
     val botToken = args[0]
@@ -12,6 +13,19 @@ fun main(args: Array<String>) {
     val messageChatIdRegex = "\"chat\":\\s*\\{[^}]*\"id\":\\s*(\\d+)".toRegex()
     val messageTextRegex = "\"text\":\\s*\"([^\"]*)\"".toRegex()
     val messageDataRegex = "\"data\":\\s*\"([^\"]*)\"".toRegex()
+
+    fun checkNextQuestionAndSend(
+        trainer: LearnWordsTrainer,
+        telegramBotService: TelegramBotService,
+        chatId: Long
+    ) {
+        val nextQuestion = trainer.getNextQuestion()
+        if (nextQuestion == null) {
+            telegramBotService.sendMessage(chatId, "Все слова в словаре выучены.")
+        } else {
+            telegramBotService.sendQuestion(chatId, nextQuestion )
+        }
+    }
 
     while (true) {
         Thread.sleep(2000)
@@ -47,9 +61,8 @@ fun main(args: Array<String>) {
 
         }
         if (data?.lowercase() == LEARNING_BUTTON) {
-            telegramBotService.sendMessage(chatId, "Изучение слов")
+          checkNextQuestionAndSend(trainer, telegramBotService, chatId)
             println("Learning button clicked")
-
         }
     }
 }
