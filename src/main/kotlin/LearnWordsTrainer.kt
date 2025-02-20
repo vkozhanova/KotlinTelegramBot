@@ -1,6 +1,7 @@
 import java.io.File
 import java.io.FileNotFoundException
 import java.lang.IllegalStateException
+
 data class Word(
     val original: String,
     val translate: String,
