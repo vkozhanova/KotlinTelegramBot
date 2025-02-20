@@ -30,29 +30,45 @@ fun main(args: Array<String>) {
         val message = messageTextRegex.find(updates)?.groups?.get(1)?.value
         val data = messageDataRegex.find(updates)?.groups?.get(1)?.value
 
-        if (message != null) {
-            if (message.lowercase() == "hello") {
+        when {
+            message?.lowercase() == "hello" -> {
                 telegramBotService.sendMessage(chatId, message)
                 println(message)
             }
-            if (message.lowercase() == "/start") {
+
+            message?.lowercase() == "/start" -> {
                 telegramBotService.sendMenu(chatId)
                 println(message)
             }
-        }
 
-        if (data?.lowercase() == STATISTICS_BUTTON) {
-            val statistics = trainer.getStatistics()
-            telegramBotService.sendMessage(
-                chatId,
-                "Выучено ${statistics.learnedCount} из ${statistics.totalCount} | ${statistics.percent}%"
-            )
-            println("Statistics button clicked")
+            data?.lowercase() == STATISTICS_BUTTON -> {
+                val statistics = trainer.getStatistics()
+                telegramBotService.sendMessage(
+                    chatId,
+                    "Выучено ${statistics.learnedCount} из ${statistics.totalCount} | ${statistics.percent}%"
+                )
+                println("Statistics button clicked")
+            }
 
-        }
-        if (data?.lowercase() == LEARNING_BUTTON) {
-            checkNextQuestionAndSend(trainer, telegramBotService, chatId)
-            println("Learning button clicked")
+            data?.lowercase() == LEARNING_BUTTON -> {
+                checkNextQuestionAndSend(trainer, telegramBotService, chatId)
+                println("Learning button clicked")
+            }
+
+            data?.startsWith(CALLBACK_DATA_ANSWER_PREFIX) == true -> {
+                val userAnswerIndex = data.substringAfter(CALLBACK_DATA_ANSWER_PREFIX).toIntOrNull()
+                val isCorrect = trainer.checkAnswer(userAnswerIndex)
+                if (isCorrect) {
+                    telegramBotService.sendMessage(chatId, "Правильно!")
+                } else {
+                    val correctAnswer = trainer.question?.correctAnswer
+                    telegramBotService.sendMessage(
+                        chatId,
+                        "Неправильно! ${correctAnswer?.original} - это ${correctAnswer?.translate}"
+                    )
+                }
+                checkNextQuestionAndSend(trainer, telegramBotService, chatId)
+            }
         }
     }
 }
