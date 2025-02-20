@@ -14,19 +14,6 @@ fun main(args: Array<String>) {
     val messageTextRegex = "\"text\":\\s*\"([^\"]*)\"".toRegex()
     val messageDataRegex = "\"data\":\\s*\"([^\"]*)\"".toRegex()
 
-    fun checkNextQuestionAndSend(
-        trainer: LearnWordsTrainer,
-        telegramBotService: TelegramBotService,
-        chatId: Long
-    ) {
-        val nextQuestion = trainer.getNextQuestion()
-        if (nextQuestion == null) {
-            telegramBotService.sendMessage(chatId, "Все слова в словаре выучены.")
-        } else {
-            telegramBotService.sendQuestion(chatId, nextQuestion )
-        }
-    }
-
     while (true) {
         Thread.sleep(2000)
         val updates: String = telegramBotService.getUpdates(updateId)
@@ -56,15 +43,30 @@ fun main(args: Array<String>) {
 
         if (data?.lowercase() == STATISTICS_BUTTON) {
             val statistics = trainer.getStatistics()
-            telegramBotService.sendMessage(chatId, "Выучено ${statistics.learnedCount} из ${statistics.totalCount} | ${statistics.percent}%")
+            telegramBotService.sendMessage(
+                chatId,
+                "Выучено ${statistics.learnedCount} из ${statistics.totalCount} | ${statistics.percent}%"
+            )
             println("Statistics button clicked")
 
         }
         if (data?.lowercase() == LEARNING_BUTTON) {
-          checkNextQuestionAndSend(trainer, telegramBotService, chatId)
+            checkNextQuestionAndSend(trainer, telegramBotService, chatId)
             println("Learning button clicked")
         }
     }
 }
 
+fun checkNextQuestionAndSend(
+    trainer: LearnWordsTrainer,
+    telegramBotService: TelegramBotService,
+    chatId: Long
+) {
+    val nextQuestion = trainer.getNextQuestion()
+    if (nextQuestion == null) {
+        telegramBotService.sendMessage(chatId, "Все слова в словаре выучены.")
+    } else {
+        telegramBotService.sendQuestion(chatId, nextQuestion)
+    }
+}
 

@@ -9,6 +9,7 @@ const val BASE_URL = "https://api.telegram.org/bot"
 const val CALLBACK_DATA_ANSWER_PREFIX = "answer_"
 
 class TelegramBotService(private val botToken: String) {
+
     private val client = HttpClient.newBuilder().build()
 
     fun getUpdates(updateId: Int): String {
