@@ -24,7 +24,7 @@ const val LEARNED_ANSWER_COUNT = 3
 const val COUNT_OF_QUESTION_WORDS = 4
 
 class LearnWordsTrainer {
-    private var question: Question? = null
+    var question: Question? = null
     private val dictionary = loadDictionary()
 
     fun getStatistics(): Statistics {
