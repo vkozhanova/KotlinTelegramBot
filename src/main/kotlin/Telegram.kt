@@ -84,5 +84,6 @@ fun checkNextQuestionAndSend(
     } else {
         telegramBotService.sendQuestion(chatId, nextQuestion)
     }
+
 }
 
