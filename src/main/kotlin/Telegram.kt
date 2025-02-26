@@ -161,6 +161,7 @@ fun checkNextQuestionAndSend(
         telegramBotService.sendMessage(json, chatId, "Все слова в словаре выучены.")
     } else {
         telegramBotService.sendQuestion(json, chatId, nextQuestion)
+
     }
 }
 

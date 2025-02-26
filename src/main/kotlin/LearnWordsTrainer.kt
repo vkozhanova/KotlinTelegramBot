@@ -108,6 +108,7 @@ class LearnWordsTrainer(
         wordsFile.printWriter().use { out ->
             for (word in dictionary) {
                 wordsFile.appendText("${word.original}|${word.translate}|${word.correctAnswersCount}\n")
+
             }
         }
     }
