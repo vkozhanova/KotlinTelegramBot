@@ -77,7 +77,7 @@ class LearnWordsTrainer(
     private fun loadDictionary(): MutableList<Word> {
 
         try {
-            val wordsFile: File = File(fileName)
+            val wordsFile = File(fileName)
             if (!wordsFile.exists()) {
                 File("words.txt").copyTo(wordsFile)
             }
@@ -105,7 +105,7 @@ class LearnWordsTrainer(
 
     private fun saveDictionary() {
         val wordsFile = File(fileName)
-        wordsFile.printWriter().use { out ->
+        wordsFile.printWriter().use {
             for (word in dictionary) {
                 wordsFile.appendText("${word.original}|${word.translate}|${word.correctAnswersCount}\n")
 
