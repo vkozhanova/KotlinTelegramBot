@@ -1,6 +1,7 @@
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import java.io.IOException
 
 @Serializable
 data class Update(
@@ -75,15 +76,23 @@ fun main(args: Array<String>) {
     val telegramBotService = TelegramBotService(botToken)
 
     while (true) {
-        Thread.sleep(2000)
-        val responseString: String = telegramBotService.getUpdates(lastUpdateId)
-        println(responseString)
+        try {
+            Thread.sleep(2000)
+            val responseString: String = telegramBotService.getUpdates(lastUpdateId)
+            println(responseString)
 
-        val response: Response = json.decodeFromString(responseString)
-        if (response.result.isEmpty()) continue
-        val sortedUpdates = response.result.sortedBy { it.updateId }
-        sortedUpdates.forEach { handleUpdate(it, json, telegramBotService, trainers) }
-        lastUpdateId = sortedUpdates.last().updateId + 1
+            val response: Response = json.decodeFromString(responseString)
+            if (response.result.isEmpty()) continue
+            val sortedUpdates = response.result.sortedBy { it.updateId }
+            sortedUpdates.forEach { handleUpdate(it, json, telegramBotService, trainers) }
+            lastUpdateId = sortedUpdates.last().updateId + 1
+        } catch (e: Exception) {
+            println("Ошибка при получении обновлений: ${e.message}. Повторная попытка через 5 секунд.")
+            Thread.sleep(5000)
+        } catch (e: Exception) {
+            println("Произошла ошибка: ${e.message}. Повторная попытка через 5 секунд.")
+            Thread.sleep(5000)
+        }
     }
 }
 

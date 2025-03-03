@@ -1,10 +1,276 @@
-hello|привет|0
-dog|собака|0
-cat|кошка|0
-good evening|добрый вечер|0
-house|дом|0
-circle|окружность|0
-ring|кольцо|0
-pattern|узор|0
-figure|фигура|0
-picture|картина|0
+To abhor|Ненавидеть|0
+To abrogate|Отменить|0
+To abstain|Воздержаться|0
+To strengthen|Укрепить|0
+To yield|Уступить|0
+To sustain|Поддерживать|0
+To seize|Захватить|0
+To nourish|Питать|0
+To desist|Запретить|0
+To recapitulate|Пересказывать|0
+To proclaim|Провозгласить|0
+To beget|Родить|0
+To mature|Созреть|0
+To contemplate|Созерцать|0
+To flourish|Процветать|0
+To cable|Проводить|0
+To congregate|Собираться|0
+To induce|Побудить|0
+To highlight|Выделять|0
+To foretell|Предсказывать|0
+To foreshadow|Предвещать|0
+To interlace|Переплетать|0
+To relish|Наслаждаться|0
+To tread|Ухаживать|0
+To rehearse|Репетировать|0
+To narrate|Рассказывать|0
+To alleviate|Облегчать|0
+To bilk|Обналичивать|0
+To refine|Усовершенствовать|0
+To restructure|Реструктурировать|0
+To decay|Распадаться|0
+To corrupt|Развращать|0
+To alter|Изменяться|0
+To discern|Различить|0
+To disclose|Раскрыть|0
+To inscribe|Начертать|0
+To proffer|Предложить|0
+To meddle|Вмешиваться|0
+To violate|Нарушать|0
+To further|Продолжать|0
+To humble|Смирять|0
+To subdue|Покорять|0
+To demote|Разжаловать|0
+To obey|Подчиняться|0
+To employ|Нанимать|1
+To chastise|Наказывать|0
+To concoct|Придумать|0
+To condone|Потворствовать|0
+To cringe|Сокрушаться|0
+To ensconce|Приютить|0
+To sanction|Наказывать|0
+To affix|Прикрепить|0
+To curb|Обуздать|0
+To restrain|Сдерживать|0
+To enlarge|Повысить|0
+To govern|Управлять|0
+To reckon|Пересчитать|0
+To esteem|Уважать|0
+To sweeten|Подсластить|0
+To fluctuate|Колебаться|0
+To fare|Зависеть|0
+To halt|Остановить|0
+To endure|Выдержать|0
+To revenge|Мстить|0
+To attain|Достигать|0
+To divest|Расставаться|0
+To elucidate|Прояснить|0
+To invent|Изобретать|0
+To shield|Защищать|0
+To resemble|Быть похожим|0
+To ingest|Проглотить|0
+To dispense|Раздавать|0
+To match|Соответствовать|0
+To engross|Вовлечь|0
+To collude|Сговориться|0
+To split|Разделить|0
+To unveil|Огласить|0
+To bear|Вынашивать|0
+To prompt|Подсказать|0
+To mold|Формировать|0
+To rub|Растирать|0
+To stomp|Топтать|0
+To narrate|Повествовать|0
+To sense|Чувствовать|0
+To outdate|Устаревать|0
+To clutter|Загромождать|0
+To scrabble|Царапать|0
+To accuse|Обвинять|0
+To summon|Вызвать|0
+To outfit|Снарядить|0
+To convert|Преобразовать|0
+To override|Переопределить|0
+To bind|Связать|0
+To nurture|Воспитывать|0
+To recount|Пересказывать|0
+To backlog|Отставать|0
+To inspectorate|Инспектировать|0
+To unearth|Раскопать|0
+To demote|Разжаловать|0
+To trap|Заманить в ловушку|0
+Doorstep|Порог квартиры|0
+Supervisor|Супервайзер|0
+Affirmation|Подтверждение|0
+Uptick|Толчок|0
+Drop-off|Спад|0
+Conversation|Разговор|0
+Indifference|Безразличие|0
+Ageism|Эйджизм|0
+Segmentation|Сегментация|0
+Landmark|Веха|0
+Upheaval|Переворот|0
+Harassment|Домогательство|0
+Disarray|Беспорядок|0
+Proof|Доказательство|0
+Influx|Наплыв|0
+Struggle|Борьба|0
+Loneliness|Одиночество|0
+Mental Health|Психическое здоровье|0
+Authenticity|Подлинность|0
+Donation|Пожертвование|0
+Backlash|Обратная реакция|0
+Connotation|Подтекст|1
+Affinity|Сходство|0
+Diversification|Разнообразие|0
+Takeover|Поглощение|0
+Feminism|Феминизм|0
+Equality|Равенство|0
+Sustainability|Устойчивость|0
+Chunk|Ломоть|0
+Repercussion|Отзвук|0
+Preference|Преимущество|0
+Aspiration|Стремление|0
+Consumption|Потребление|0
+Mismanagement|Бесхозяйственность|0
+Keynote|Лейтмотив|0
+Rivalry|Соперничество|0
+Disparity|Несоответствие|0
+Repayment|Расплата|0
+Allegation|Обвинение|0
+Prevalence|Распространенность|0
+Nostalgia|Ностальгия|0
+Uplighting|Усложнение|0
+Escapism|Эскапизм|0
+Nonfiction|Нон-фикшн|0
+Psychology|Психология|0
+Funnel|Воронка|0
+Amateur|Любитель|0
+Protagonist|Протагонист|0
+Pinpoint|Точка опоры|0
+Announcement|Анонс|0
+Consequence|Заключение|0
+Exaggeration|Преувеличение|0
+Scrutiny|Исследование|0
+Blueprint|План|0
+Expansion|Развитие|0
+Extent|Степень|0
+Victim|Жертва|0
+Ownership|Право собственности|0
+Mass-market|Масс-маркет|0
+Variety|Многообразие|0
+Headline|Заголовок|0
+Allegation|Утверждение|0
+Restriction|Ограничение|0
+Comprehension|Понимание|0
+Existence|Бытие|0
+Counterpart|Аналог|0
+Goldmine|Золотая жила|0
+Applause|Аплодисменты|0
+Satisfaction|Удовлетворение|0
+Testimonial|Отзыв|0
+Empathy|Эмпатия|0
+Consideration|Размышление|0
+Touchpoint|Точка соприкосновения|0
+Jargon|Жаргон|0
+Background|Предыстория|0
+Relief|Помощь|0
+Perception|Восприятие|0
+Stance|Позиция|0
+Catharsis|Катарсис|0
+Solace|Утешение|0
+Fast-changing|Быстро меняющийся|0
+Highly skilled|Высококвалифицированный|0
+Eligible|Подходящий|0
+Vibrant|Яркий|0
+Lifelong|Пожизненный|0
+Fully furnished|Полностью обустроенный|0
+Canonical|Канонический|0
+Inspirational|Вдохновляющий|0
+Holistic|Целостный|0
+Empirical|Эмпирический|0
+Fun-filled|Наполненный весельем|0
+Award-winning|Награжденный|0
+Rapid|Быстрый|0
+Job-ready|Готовый к работе|0
+Median|Средний|0
+Lucrative|Выгодный|0
+Savvy|Проницательный|0
+Thoughtful|Вдумчивый|0
+Elusive|Неуловимый|0
+On-demand|Востребованный|0
+Nonexistent|Несуществующий|0
+Luxurious|Роскошный|1
+Entertaining|Развлекательный|0
+Conscious|Сознательный|0
+Mythological|Мифологический|0
+Prosaic|Прозаический|0
+Uplifting|Поднимающий настроение|0
+Looming|Надвигающийся|0
+User-generated|Созданный пользователями|0
+Experimental|Экспериментальный|0
+Aesthetic|Эстетический|0
+Feasible|Осуществимый|0
+Foreseeable|Предвидимый|0
+Streamlined|Оптимизированный|0
+Brand new|Инновационный|0
+Ephemeral|Эфемерный|0
+Prevalent|Распространенный|0
+Sizable|Большой|0
+Shoppable|Доступный для покупки|0
+Stratospheric|Стратосферный|0
+Major|Крупный, главный|0
+Unprecedented|Беспрецедентный|0
+Exorbitant|Непомерный|0
+Artistic|Художественный, творческий|0
+Prospective|Перспективный|0
+Like-minded|Похожий|0
+Editorial|Редакторский|0
+Solitary|Уединенный|0
+Controversial|Спорный|0
+Shareable|Делимый|0
+Journalistic|Журналистский|0
+Elegiac|Элегический|0
+Short-lived|Недолговечный|0
+Authoritative|Авторитетный|0
+Subsequent|Последующий|0
+Unavoidable|Неизбежный|0
+Disastrous|Катастрофический|0
+Collaboratively|Совместно|0
+Twofold|Вдвойне|0
+Backwards|Наоборот, назад|0
+Alongside|Наряду|0
+Face-to-face|Лицом к лицу|0
+Increasingly|Все чаще|0
+Likewise|Аналогично|0
+Inherently|По своей сути|0
+Yearslong|В течение года|0
+Dramatically|Значительно|0
+Overall|В целом|0
+Sustainably|Устойчиво|0
+Thoroughly|Тщательно|0
+Radically|Радикально|0
+Undeniably|Бесспорно|0
+Amongst|Среди|0
+Specifically|Конкретно|0
+Unless|Если только|0
+Seamless|Беспрепятственно|0
+Alternatively|Альтернативно|0
+Disproportionately|Непропорционально|0
+Innermost|Сокровенно|0
+Midway|Посредине|0
+Unthinkable|Немыслимо|0
+Ruthlessly|Беспощадно|0
+Altogether|В целом|0
+Beneath|Под, внизу|0
+Factually|По-настоящему|0
+Indeed|Действительно|0
+Occasionally|Время от времени|0
+Plenty|Много|0
+Anywise|Как угодно|0
+Somewhere|Где-то|0
+Throughout|Повсюду|0
+Scarcely|Скудно|0
+Weekly|Еженедельно|0
+Quietly|Тихо|0
+Rather too|Скорее слишком|0
+Chiefly|В основном|0
