@@ -1,6 +1,8 @@
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import java.io.File
+import java.sql.DriverManager
 
 @Serializable
 data class Update(
@@ -65,25 +67,40 @@ data class InlineKeyBoard(
 )
 
 fun main(args: Array<String>) {
+    val connection = DriverManager.getConnection("jdbc:sqlite:data.db?busy_timeout=5000")
+    connection.use {
+        updateDictionary(File("words.txt"), connection)
+        val dictionary = DatabaseUserDictionary(connection)
+        val trainer = LearnWordsTrainer(dictionary)
 
-    val botToken = args[0]
-    var lastUpdateId = 0L
+        val botToken = args[0]
+        var lastUpdateId = 0L
 
-    val json = Json { ignoreUnknownKeys = true }
-    val trainers = HashMap<Long, LearnWordsTrainer>()
+        val json = Json { ignoreUnknownKeys = true }
+        val trainers = HashMap<Long, LearnWordsTrainer>()
 
-    val telegramBotService = TelegramBotService(botToken)
+        val telegramBotService = TelegramBotService(botToken)
 
-    while (true) {
-        Thread.sleep(2000)
-        val responseString: String = telegramBotService.getUpdates(lastUpdateId)
-        println(responseString)
+        while (true) {
+            Thread.sleep(2000)
+            val responseString: String = telegramBotService.getUpdates(lastUpdateId)
+            println(responseString)
 
-        val response: Response = json.decodeFromString(responseString)
-        if (response.result.isEmpty()) continue
-        val sortedUpdates = response.result.sortedBy { it.updateId }
-        sortedUpdates.forEach { handleUpdate(it, json, telegramBotService, trainers) }
-        lastUpdateId = sortedUpdates.last().updateId + 1
+            val response: Response = json.decodeFromString(responseString)
+            if (response.result.isEmpty()) continue
+            val sortedUpdates = response.result.sortedBy { it.updateId }
+            sortedUpdates.forEach {
+                handleUpdate(
+                    update = it,
+                    json = json,
+                    telegramBotService = telegramBotService,
+                    trainers = trainers,
+                    dictionary = dictionary,
+
+                    )
+            }
+            lastUpdateId = sortedUpdates.last().updateId + 1
+        }
     }
 }
 
@@ -91,13 +108,25 @@ fun handleUpdate(
     update: Update,
     json: Json,
     telegramBotService: TelegramBotService,
-    trainers: HashMap<Long, LearnWordsTrainer>
+    trainers: HashMap<Long, LearnWordsTrainer>,
+    dictionary: IUserDictionary,
 ) {
     val message = update.message?.text
     val chatId = update.message?.chat?.id ?: update.callbackQuery?.message?.chat?.id ?: return
     val data = update.callbackQuery?.data
 
-    val trainer = trainers.getOrPut(chatId) { LearnWordsTrainer("$chatId.txt") }
+    if(dictionary is DatabaseUserDictionary) {
+        dictionary.setCurrentChatId(chatId)
+    }
+
+    try {
+        dictionary.addUserIfNotExist(chatId)
+    } catch (e: Exception) {
+        println("Ошибка при добавлении пользователя: ${e.message}")
+        return
+    }
+
+    val trainer = trainers.getOrPut(chatId) { LearnWordsTrainer(dictionary) }
 
     when {
         message?.lowercase() == "hello" -> {
@@ -161,7 +190,6 @@ fun checkNextQuestionAndSend(
         telegramBotService.sendMessage(json, chatId, "Все слова в словаре выучены.")
     } else {
         telegramBotService.sendQuestion(json, chatId, nextQuestion)
-
     }
 }
 
