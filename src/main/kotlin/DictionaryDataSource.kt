@@ -36,18 +36,24 @@ interface IUserDictionary {
                     """
                     CREATE TABLE IF NOT EXISTS words (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    text VARCHAR UNiQUE NOT NULL,
+                    text VARCHAR UNIQUE NOT NULL,
                     translate VARCHAR NOT NULL,
                     correctAnswersCount INTEGER DEFAULT 0
                     );
-                    
+                    """.trimIndent()
+                )
+                statement.executeUpdate(
+                    """ 
                     CREATE TABLE IF NOT EXISTS users (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     username VARCHAR,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     chat_id INTEGER UNIQUE NOT NULL
                     );
-                    
+                    """.trimIndent()
+                )
+                statement.executeUpdate(
+                    """
                     CREATE TABLE IF NOT EXISTS user_answers (
                     user_id INTEGER,
                     word_id INTEGER,
@@ -63,11 +69,9 @@ interface IUserDictionary {
             connection.commit()
             println("Транзакция успешно завершена.")
         } catch (e: Exception) {
-
             connection.rollback()
             println("Ошибка: ${e.message}. Транзакция откачена.")
         } finally {
-
             connection.autoCommit = true
         }
     }
@@ -98,16 +102,26 @@ interface IUserDictionary {
      }
 
         override fun getNumOfLearnedWords(): Int {
-            connection.createStatement().use { statement ->
-                val resultSet = statement.executeQuery(
-                    """
-               SELECT COUNT(DISTINCT word_id)
-                FROM user_answers
-                WHERE correctAnswersCount >= $learningThreshold;
-            """.trimIndent()
-                )
-                return resultSet.getInt(2)
+            if (currentChatId == null) {
+                println("Ошибка: currentChatId не установлен.")
+                return 0
             }
+
+            val query = """
+        SELECT COUNT(*) 
+        FROM user_answers 
+        WHERE user_id = (SELECT id FROM users WHERE chat_id = ?)
+    """.trimIndent()
+
+            connection.prepareStatement(query).use { statement ->
+                statement.setLong(1, currentChatId!!)
+                statement.executeQuery().use { resultSet ->
+                    if (resultSet.next()) {
+                        return resultSet.getInt(1)
+                    }
+                }
+            }
+            return 0
         }
 
         override fun getSize(): Int {
@@ -185,34 +199,37 @@ interface IUserDictionary {
     }
 
 
-    fun updateDictionary(wordsFile: File, connection: Connection) {
-        synchronized(connection) {
-            val insertStatement = connection.prepareStatement("INSERT OR IGNORE INTO words (text, translate) VALUES (?, ?)")
-            connection.autoCommit = false
-            try {
-                wordsFile.forEachLine { line ->
-                    val parts = line.split("|").map { it.trim() }
-                    if (parts.size != 2) {
-                        println("Некорректная строка: $line")
-                        return@forEachLine
-                    }
-                    insertStatement.apply {
-                        setString(1, parts[0])
-                        setString(2, parts[1])
-                        addBatch()
-                    }
+fun updateDictionary(wordsFile: File, connection: Connection) {
+    synchronized(connection) {
+        val insertStatement = connection.prepareStatement("INSERT OR IGNORE INTO words (text, translate) VALUES (?, ?)")
+        connection.autoCommit = false
+        try {
+            wordsFile.forEachLine { line ->
+                val parts = line.split("|").map { it.trim() }
+                if (parts.size != 2) {
+                    println("Некорректная строка: $line")
+                    return@forEachLine
                 }
-                insertStatement.executeBatch()
-                connection.commit()
-            } catch (e: Exception) {
-                connection.rollback()
-                throw RuntimeException("Ошибка при загрузке словаря: ${e.message}", e)
-            } finally {
-                insertStatement.close()
-                connection.autoCommit = true
+                insertStatement.apply {
+                    setString(1, parts[0])
+                    setString(2, parts[1])
+                    addBatch()
+                }
             }
+            insertStatement.executeBatch()
+            connection.commit()
+        } catch (e: Exception) {
+            connection.rollback()
+            throw RuntimeException("Ошибка при загрузке словаря: ${e.message}", e)
+        } finally {
+            insertStatement.close()
+            connection.autoCommit = true
         }
     }
+}
+
+
+
 
 
 

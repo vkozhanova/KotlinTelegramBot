@@ -21,7 +21,6 @@ class LearnWordsTrainer(
     private val userDictionary: IUserDictionary,
     private val countOfQuestionWords: Int = 4,
 ) {
-
     var question: Question? = null
 
     fun getStatistics(): Statistics {

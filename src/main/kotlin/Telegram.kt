@@ -184,7 +184,6 @@ fun checkNextQuestionAndSend(
     telegramBotService: TelegramBotService,
     chatId: Long
 ) {
-
     val nextQuestion = trainer.getNextQuestion()
     if (nextQuestion == null) {
         telegramBotService.sendMessage(json, chatId, "Все слова в словаре выучены.")
