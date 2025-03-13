@@ -111,6 +111,7 @@ interface IUserDictionary {
         SELECT COUNT(*) 
         FROM user_answers 
         WHERE user_id = (SELECT id FROM users WHERE chat_id = ?)
+        AND correct_answer_count >= $learningThreshold;
     """.trimIndent()
 
             connection.prepareStatement(query).use { statement ->

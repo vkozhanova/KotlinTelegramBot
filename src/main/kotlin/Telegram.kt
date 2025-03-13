@@ -96,7 +96,6 @@ fun main(args: Array<String>) {
                     telegramBotService = telegramBotService,
                     trainers = trainers,
                     dictionary = dictionary,
-
                     )
             }
             lastUpdateId = sortedUpdates.last().updateId + 1

@@ -72,7 +72,6 @@ class LearnWordsTrainer(
     fun resetProgress() {
         userDictionary.resetUserProgress()
     }
-
 }
 
 
