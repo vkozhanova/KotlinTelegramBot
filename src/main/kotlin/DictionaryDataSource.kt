@@ -101,6 +101,33 @@ interface IUserDictionary {
          throw RuntimeException("Не удалось добавить пользователя после нескольких попыток")
      }
 
+     fun deleteWordsAndRelatedDataByIdRange(startId: Int, endId: Int) {
+         connection.autoCommit = false
+         try{
+             val deleteAnswersQuery = "DELETE FROM user_answers WHERE word_id BETWEEN ? AND ?"
+             connection.prepareStatement(deleteAnswersQuery).use { statement ->
+                 statement.setInt(1, startId)
+                 statement.setInt(2, endId)
+                 statement.executeUpdate()
+             }
+
+             val deleteWordsQuery = "DELETE FROM words WHERE id BETWEEN ? AND ?"
+             connection.prepareStatement(deleteWordsQuery).use { statement ->
+                 statement.setInt(1, startId)
+                 statement.setInt(2, endId)
+                 statement.executeUpdate()
+             }
+
+             connection.commit()
+             println("Строки с id от $startId до $endId и связанные данные успешно удалены")
+         } catch (e: Exception) {
+             connection.rollback()
+             throw RuntimeException("Ошибка в удалении строк: ${e.message}", e)
+         } finally {
+             connection.autoCommit = true
+         }
+     }
+
         override fun getNumOfLearnedWords(): Int {
             if (currentChatId == null) {
                 println("Ошибка: currentChatId не установлен.")
@@ -227,7 +254,9 @@ fun updateDictionary(wordsFile: File, connection: Connection) {
             connection.autoCommit = true
         }
     }
+
 }
+
 
 
 

@@ -72,6 +72,7 @@ fun main(args: Array<String>) {
         updateDictionary(File("words.txt"), connection)
         val dictionary = DatabaseUserDictionary(connection)
         val trainer = LearnWordsTrainer(dictionary)
+//        dictionary.deleteWordsAndRelatedDataByIdRange(0, 0)
 
         val botToken = args[0]
         var lastUpdateId = 0L

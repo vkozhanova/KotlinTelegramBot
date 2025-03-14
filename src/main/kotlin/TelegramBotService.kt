@@ -66,18 +66,19 @@ class TelegramBotService(private val botToken: String) {
     }
 
     fun sendQuestion(json: Json, chatId: Long, question: Question): String? {
+        val buttonsInColumn = question.variants.mapIndexed{ index, word ->
+            listOf(
+                InlineKeyBoard(
+                    text = word.translate,
+                    callbackData = "$CALLBACK_DATA_ANSWER_PREFIX$index"
+                )
+            )
+        }
 
         val requestBody = SendMessageRequest(
             chatId = chatId,
             text = question.correctAnswer.original,
-            replyMarkup = ReplyMarkup(
-                listOf(question.variants.mapIndexed { index, word ->
-                    InlineKeyBoard(
-                        text = word.translate,
-                        callbackData = "$CALLBACK_DATA_ANSWER_PREFIX$index"
-                    )
-                })
-            )
+            replyMarkup = ReplyMarkup(buttonsInColumn)
         )
 
         val requestBodyString = json.encodeToString(requestBody)
