@@ -1,10 +1,276 @@
-hello|привет|0
-dog|собака|0
-cat|кошка|0
-good evening|добрый вечер|0
-house|дом|0
-circle|окружность|0
-ring|кольцо|0
-pattern|узор|0
-figure|фигура|0
-picture|картина|0
+To abhor|Ненавидеть
+To abrogate|Отменить
+To abstain|Воздержаться
+To strengthen|Укрепить
+To yield|Уступить
+To sustain|Поддерживать
+To seize|Захватить
+To nourish|Питать
+To desist|Запретить
+To recapitulate|Пересказывать
+To proclaim|Провозгласить
+To beget|Родить
+To mature|Созреть
+To contemplate|Созерцать
+To flourish|Процветать
+To cable|Проводить
+To congregate|Собираться
+To induce|Побудить
+To highlight|Выделять
+To foretell|Предсказывать
+To foreshadow|Предвещать
+To interlace|Переплетать
+To relish|Наслаждаться
+To tread|Ухаживать
+To rehearse|Репетировать
+To narrate|Рассказывать
+To alleviate|Облегчать
+To bilk|Обналичивать
+To refine|Усовершенствовать
+To restructure|Реструктурировать
+To decay|Распадаться
+To corrupt|Развращать
+To alter|Изменяться
+To discern|Различить
+To disclose|Раскрыть
+To inscribe|Начертать
+To proffer|Предложить
+To meddle|Вмешиваться
+To violate|Нарушать
+To further|Продолжать
+To humble|Смирять
+To subdue|Покорять
+To demote|Разжаловать
+To obey|Подчиняться
+To employ|Нанимать
+To chastise|Наказывать
+To concoct|Придумать
+To condone|Потворствовать
+To cringe|Сокрушаться
+To ensconce|Приютить
+To sanction|Наказывать
+To affix|Прикрепить
+To curb|Обуздать
+To restrain|Сдерживать
+To enlarge|Повысить
+To govern|Управлять
+To reckon|Пересчитать
+To esteem|Уважать
+To sweeten|Подсластить
+To fluctuate|Колебаться
+To fare|Зависеть
+To halt|Остановить
+To endure|Выдержать
+To revenge|Мстить
+To attain|Достигать
+To divest|Расставаться
+To elucidate|Прояснить
+To invent|Изобретать
+To shield|Защищать
+To resemble|Быть похожим
+To ingest|Проглотить
+To dispense|Раздавать
+To match|Соответствовать
+To engross|Вовлечь
+To collude|Сговориться
+To split|Разделить
+To unveil|Огласить
+To bear|Вынашивать
+To prompt|Подсказать
+To mold|Формировать
+To rub|Растирать
+To stomp|Топтать
+To narrate|Повествовать
+To sense|Чувствовать
+To outdate|Устаревать
+To clutter|Загромождать
+To scrabble|Царапать
+To accuse|Обвинять
+To summon|Вызвать
+To outfit|Снарядить
+To convert|Преобразовать
+To override|Переопределить
+To bind|Связать
+To nurture|Воспитывать
+To recount|Пересказывать
+To backlog|Отставать
+To inspectorate|Инспектировать
+To unearth|Раскопать
+To demote|Разжаловать
+To trap|Заманить в ловушку
+Doorstep|Порог квартиры
+Supervisor|Супервайзер
+Affirmation|Подтверждение
+Uptick|Толчок
+Drop-off|Спад
+Conversation|Разговор
+Indifference|Безразличие
+Ageism|Эйджизм
+Segmentation|Сегментация
+Landmark|Веха
+Upheaval|Переворот
+Harassment|Домогательство
+Disarray|Беспорядок
+Proof|Доказательство
+Influx|Наплыв
+Struggle|Борьба
+Loneliness|Одиночество
+Mental Health|Психическое здоровье
+Authenticity|Подлинность
+Donation|Пожертвование
+Backlash|Обратная реакция
+Connotation|Подтекст
+Affinity|Сходство
+Diversification|Разнообразие
+Takeover|Поглощение
+Feminism|Феминизм
+Equality|Равенство
+Sustainability|Устойчивость
+Chunk|Ломоть
+Repercussion|Отзвук
+Preference|Преимущество
+Aspiration|Стремление
+Consumption|Потребление
+Mismanagement|Бесхозяйственность
+Keynote|Лейтмотив
+Rivalry|Соперничество
+Disparity|Несоответствие
+Repayment|Расплата
+Allegation|Обвинение
+Prevalence|Распространенность
+Nostalgia|Ностальгия
+Uplighting|Усложнение
+Escapism|Эскапизм
+Nonfiction|Нон-фикшн
+Psychology|Психология
+Funnel|Воронка
+Amateur|Любитель
+Protagonist|Протагонист
+Pinpoint|Точка опоры
+Announcement|Анонс
+Consequence|Заключение
+Exaggeration|Преувеличение
+Scrutiny|Исследование
+Blueprint|План
+Expansion|Развитие
+Extent|Степень
+Victim|Жертва
+Ownership|Право собственности
+Mass-market|Масс-маркет
+Variety|Многообразие
+Headline|Заголовок
+Allegation|Утверждение
+Restriction|Ограничение
+Comprehension|Понимание
+Existence|Бытие
+Counterpart|Аналог
+Goldmine|Золотая жила
+Applause|Аплодисменты
+Satisfaction|Удовлетворение
+Testimonial|Отзыв
+Empathy|Эмпатия
+Consideration|Размышление
+Touchpoint|Точка соприкосновения
+Jargon|Жаргон
+Background|Предыстория
+Relief|Помощь
+Perception|Восприятие
+Stance|Позиция
+Catharsis|Катарсис
+Solace|Утешение
+Fast-changing|Быстро меняющийся
+Highly skilled|Высококвалифицированный
+Eligible|Подходящий
+Vibrant|Яркий
+Lifelong|Пожизненный
+Fully furnished|Полностью обустроенный
+Canonical|Канонический
+Inspirational|Вдохновляющий
+Holistic|Целостный
+Empirical|Эмпирический
+Fun-filled|Наполненный весельем
+Award-winning|Награжденный
+Rapid|Быстрый
+Job-ready|Готовый к работе
+Median|Средний
+Lucrative|Выгодный
+Savvy|Проницательный
+Thoughtful|Вдумчивый
+Elusive|Неуловимый
+On-demand|Востребованный
+Nonexistent|Несуществующий
+Luxurious|Роскошный
+Entertaining|Развлекательный
+Conscious|Сознательный
+Mythological|Мифологический
+Prosaic|Прозаический
+Uplifting|Поднимающий настроение
+Looming|Надвигающийся
+User-generated|Созданный пользователями
+Experimental|Экспериментальный
+Aesthetic|Эстетический
+Feasible|Осуществимый
+Foreseeable|Предвидимый
+Streamlined|Оптимизированный
+Brand new|Инновационный
+Ephemeral|Эфемерный
+Prevalent|Распространенный
+Sizable|Большой
+Shoppable|Доступный для покупки
+Stratospheric|Стратосферный
+Major|Крупный, главный
+Unprecedented|Беспрецедентный
+Exorbitant|Непомерный
+Artistic|Художественный, творческий
+Prospective|Перспективный
+Like-minded|Похожий
+Editorial|Редакторский
+Solitary|Уединенный
+Controversial|Спорный
+Shareable|Делимый
+Journalistic|Журналистский
+Elegiac|Элегический
+Short-lived|Недолговечный
+Authoritative|Авторитетный
+Subsequent|Последующий
+Unavoidable|Неизбежный
+Disastrous|Катастрофический
+Collaboratively|Совместно
+Twofold|Вдвойне
+Backwards|Наоборот, назад
+Alongside|Наряду
+Face-to-face|Лицом к лицу
+Increasingly|Все чаще
+Likewise|Аналогично
+Inherently|По своей сути
+Yearslong|В течение года
+Dramatically|Значительно
+Overall|В целом
+Sustainably|Устойчиво
+Thoroughly|Тщательно
+Radically|Радикально
+Undeniably|Бесспорно
+Amongst|Среди
+Specifically|Конкретно
+Unless|Если только
+Seamless|Беспрепятственно
+Alternatively|Альтернативно
+Disproportionately|Непропорционально
+Innermost|Сокровенно
+Midway|Посредине
+Unthinkable|Немыслимо
+Ruthlessly|Беспощадно
+Altogether|В целом
+Beneath|Под, внизу
+Factually|По-настоящему
+Indeed|Действительно
+Occasionally|Время от времени
+Plenty|Много
+Anywise|Как угодно
+Somewhere|Где-то
+Throughout|Повсюду
+Scarcely|Скудно
+Weekly|Еженедельно
+Quietly|Тихо
+Rather too|Скорее слишком
+Chiefly|В основном

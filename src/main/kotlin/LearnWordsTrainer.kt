@@ -1,6 +1,3 @@
-import java.io.File
-import java.lang.IllegalStateException
-
 data class Word(
     val original: String,
     val translate: String,
@@ -21,17 +18,14 @@ data class Question(
 const val PERCENT_MULTIPLIER = 100
 
 class LearnWordsTrainer(
-    private val fileName: String = "words.txt",
-    private val learnedAnswerCount: Int = 3,
+    private val userDictionary: IUserDictionary,
     private val countOfQuestionWords: Int = 4,
 ) {
-
     var question: Question? = null
-    private val dictionary = loadDictionary()
 
     fun getStatistics(): Statistics {
-        val learnedCount = dictionary.filter { it.correctAnswersCount >= learnedAnswerCount }.size
-        val totalCount = dictionary.size
+        val learnedCount = userDictionary.getNumOfLearnedWords()
+        val totalCount = userDictionary.getSize()
         val percent =
             if (totalCount > 0) (learnedCount.toDouble() / totalCount * PERCENT_MULTIPLIER).toInt() else 0
         return Statistics(
@@ -42,11 +36,13 @@ class LearnWordsTrainer(
     }
 
     fun getNextQuestion(): Question? {
-
-        val notLearnedList = dictionary.filter { it.correctAnswersCount < learnedAnswerCount }
+        val notLearnedList = userDictionary.getUnlearnedWords()
         if (notLearnedList.isEmpty()) return null
         val questionWords = if (notLearnedList.size < countOfQuestionWords) {
-            val learnedList = dictionary.filter { it.correctAnswersCount >= learnedAnswerCount }.shuffled()
+            val learnedList = userDictionary.getLearnedWords().shuffled()
+            if (learnedList.isEmpty() && notLearnedList.size < countOfQuestionWords) {
+                return null
+            }
             notLearnedList.shuffled().take(countOfQuestionWords) +
                     learnedList.take(countOfQuestionWords - notLearnedList.size)
         } else {
@@ -65,8 +61,7 @@ class LearnWordsTrainer(
         return question?.let {
             val correctAnswerId = it.variants.indexOf(it.correctAnswer)
             if (correctAnswerId == userAnswerIndex) {
-                it.correctAnswer.correctAnswersCount++
-                saveDictionary()
+                userDictionary.setCorrectAnswersCount(it.correctAnswer.original, it.correctAnswer.correctAnswersCount + 1)
                 true
             } else {
                 false
@@ -74,44 +69,10 @@ class LearnWordsTrainer(
         } ?: false
     }
 
-    private fun loadDictionary(): MutableList<Word> {
-
-        try {
-            val wordsFile: File = File(fileName)
-            if (!wordsFile.exists()) {
-                File("words.txt").copyTo(wordsFile)
-            }
-            val dictionary = mutableListOf<Word>()
-
-            wordsFile.forEachLine { line ->
-                val parts = line.split("|")
-                val word = Word(
-                    original = parts[0],
-                    translate = parts[1],
-                    correctAnswersCount = parts.getOrNull(2)?.toIntOrNull() ?: 0
-                )
-                dictionary.add(word)
-            }
-            return dictionary
-        } catch (e: IndexOutOfBoundsException) {
-            throw IllegalStateException("Некорректный файл.", e)
-        }
-    }
-
     fun resetProgress() {
-        dictionary.forEach { it.correctAnswersCount = 0 }
-        saveDictionary()
+        userDictionary.resetUserProgress()
     }
 
-    private fun saveDictionary() {
-        val wordsFile = File(fileName)
-        wordsFile.printWriter().use { out ->
-            for (word in dictionary) {
-                wordsFile.appendText("${word.original}|${word.translate}|${word.correctAnswersCount}\n")
-
-            }
-        }
-    }
 }
 
 

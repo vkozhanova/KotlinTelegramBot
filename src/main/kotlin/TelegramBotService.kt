@@ -12,7 +12,7 @@ const val RESET_BUTTON = "reset_clicked"
 
 class TelegramBotService(private val botToken: String) {
 
-    private val client = HttpClient.newBuilder().build()
+    private val client = HttpClient.newHttpClient()
 
     fun getUpdates(updateId: Long): String {
 
@@ -31,7 +31,6 @@ class TelegramBotService(private val botToken: String) {
             text = message,
         )
         val requestBodyString = json.encodeToString(requestBody)
-        val client: HttpClient = HttpClient.newBuilder().build()
         val request: HttpRequest = HttpRequest.newBuilder().uri(URI.create(sendMessage))
             .header("Content-type", "application/json")
             .POST(HttpRequest.BodyPublishers.ofString(requestBodyString))
@@ -41,7 +40,6 @@ class TelegramBotService(private val botToken: String) {
     }
 
     fun sendMenu(json: Json, chatId: Long): String {
-
         val sendMessage = "$BASE_URL$botToken/sendMessage"
         val requestBody = SendMessageRequest(
             chatId = chatId,
@@ -59,7 +57,6 @@ class TelegramBotService(private val botToken: String) {
             )
         )
         val requestBodyString = json.encodeToString(requestBody)
-        val client: HttpClient = HttpClient.newBuilder().build()
         val request: HttpRequest = HttpRequest.newBuilder().uri(URI.create(sendMessage))
             .header("Content-type", "application/json")
             .POST(HttpRequest.BodyPublishers.ofString(requestBodyString))
@@ -69,19 +66,21 @@ class TelegramBotService(private val botToken: String) {
     }
 
     fun sendQuestion(json: Json, chatId: Long, question: Question): String? {
+        val buttonsInColumn = question.variants.mapIndexed{ index, word ->
+            listOf(
+                InlineKeyBoard(
+                    text = word.translate,
+                    callbackData = "$CALLBACK_DATA_ANSWER_PREFIX$index"
+                )
+            )
+        }
 
         val requestBody = SendMessageRequest(
             chatId = chatId,
             text = question.correctAnswer.original,
-            replyMarkup = ReplyMarkup(
-                listOf(question.variants.mapIndexed { index, word ->
-                    InlineKeyBoard(
-                        text = word.translate,
-                        callbackData = "$CALLBACK_DATA_ANSWER_PREFIX$index"
-                    )
-                })
-            )
+            replyMarkup = ReplyMarkup(buttonsInColumn)
         )
+
         val requestBodyString = json.encodeToString(requestBody)
         val request: HttpRequest = HttpRequest.newBuilder()
             .uri(URI.create("$BASE_URL$botToken/sendMessage"))
@@ -90,5 +89,4 @@ class TelegramBotService(private val botToken: String) {
             .build()
         return client.send(request, HttpResponse.BodyHandlers.ofString()).body()
     }
-
 }
