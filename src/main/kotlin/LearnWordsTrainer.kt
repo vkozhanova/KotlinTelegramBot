@@ -61,7 +61,10 @@ class LearnWordsTrainer(
         return question?.let {
             val correctAnswerId = it.variants.indexOf(it.correctAnswer)
             if (correctAnswerId == userAnswerIndex) {
-                userDictionary.setCorrectAnswersCount(it.correctAnswer.original, it.correctAnswer.correctAnswersCount + 1)
+                userDictionary.setCorrectAnswersCount(
+                    it.correctAnswer.original,
+                    it.correctAnswer.correctAnswersCount + 1
+                )
                 true
             } else {
                 false
@@ -72,7 +75,6 @@ class LearnWordsTrainer(
     fun resetProgress() {
         userDictionary.resetUserProgress()
     }
-
 }
 
 

@@ -1,6 +1,8 @@
 import java.io.File
+import java.io.FileNotFoundException
 import java.sql.Connection
 import java.sql.SQLException
+import java.sql.Statement
 
 interface IUserDictionary {
     fun addUserIfNotExist(chatId: Long)
@@ -12,7 +14,7 @@ interface IUserDictionary {
     fun resetUserProgress()
 }
 
- class DatabaseUserDictionary(
+class DatabaseUserDictionary(
     private val connection: Connection,
     private val learningThreshold: Int = 3,
 
@@ -34,16 +36,6 @@ interface IUserDictionary {
             connection.createStatement().use { statement ->
                 statement.executeUpdate(
                     """
-                    CREATE TABLE IF NOT EXISTS words (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    text VARCHAR UNIQUE NOT NULL,
-                    translate VARCHAR NOT NULL,
-                    correctAnswersCount INTEGER DEFAULT 0
-                    );
-                    """.trimIndent()
-                )
-                statement.executeUpdate(
-                    """ 
                     CREATE TABLE IF NOT EXISTS users (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     username VARCHAR,
@@ -76,115 +68,116 @@ interface IUserDictionary {
         }
     }
 
-     override fun addUserIfNotExist(chatId: Long) {
-         var attempts = 0
-         while (attempts < 5) {
-             try {
-                 connection.prepareStatement(
-                     """
+    override fun addUserIfNotExist(chatId: Long) {
+        var attempts = 0
+        while (attempts < 5) {
+            try {
+                connection.prepareStatement(
+                    """
              INSERT OR IGNORE INTO users (chat_id) VALUES (?);
          """.trimIndent()
-                 ).use { statement ->
-                     statement.setLong(1, chatId)
-                     statement.executeUpdate()
-                 }
-                 return
-             } catch (e: SQLException) {
-                 if (e.message?.contains("SQLITE_BUSY") == true) {
-                     attempts++
-                     Thread.sleep(100)
-                 } else {
-                     throw e
-                 }
-             }
-         }
-         throw RuntimeException("Не удалось добавить пользователя после нескольких попыток")
-     }
+                ).use { statement ->
+                    statement.setLong(1, chatId)
+                    statement.executeUpdate()
+                }
+                return
+            } catch (e: SQLException) {
+                if (e.message?.contains("SQLITE_BUSY") == true) {
+                    attempts++
+                    Thread.sleep(100)
+                } else {
+                    println("Ошибка при добавлении пользователя: ${e.message}")
+                    throw e
+                }
+            }
+        }
+        throw RuntimeException("Не удалось добавить пользователя после нескольких попыток")
+    }
 
-     fun deleteWordsAndRelatedDataByIdRange(startId: Int, endId: Int) {
-         connection.autoCommit = false
-         try{
-             val deleteAnswersQuery = "DELETE FROM user_answers WHERE word_id BETWEEN ? AND ?"
-             connection.prepareStatement(deleteAnswersQuery).use { statement ->
-                 statement.setInt(1, startId)
-                 statement.setInt(2, endId)
-                 statement.executeUpdate()
-             }
-
-             val deleteWordsQuery = "DELETE FROM words WHERE id BETWEEN ? AND ?"
-             connection.prepareStatement(deleteWordsQuery).use { statement ->
-                 statement.setInt(1, startId)
-                 statement.setInt(2, endId)
-                 statement.executeUpdate()
-             }
-
-             connection.commit()
-             println("Строки с id от $startId до $endId и связанные данные успешно удалены")
-         } catch (e: Exception) {
-             connection.rollback()
-             throw RuntimeException("Ошибка в удалении строк: ${e.message}", e)
-         } finally {
-             connection.autoCommit = true
-         }
-     }
-
-        override fun getNumOfLearnedWords(): Int {
-            if (currentChatId == null) {
-                println("Ошибка: currentChatId не установлен.")
-                return 0
+    fun deleteWordsAndRelatedDataByIdRange(startId: Int, endId: Int) {
+        connection.autoCommit = false
+        try {
+            val deleteAnswersQuery = "DELETE FROM user_answers WHERE word_id BETWEEN ? AND ?"
+            connection.prepareStatement(deleteAnswersQuery).use { statement ->
+                statement.setInt(1, startId)
+                statement.setInt(2, endId)
+                statement.executeUpdate()
             }
 
-            val query = """
-        SELECT COUNT(*) 
-        FROM user_answers 
+            val deleteWordsQuery = "DELETE FROM words WHERE id BETWEEN ? AND ?"
+            connection.prepareStatement(deleteWordsQuery).use { statement ->
+                statement.setInt(1, startId)
+                statement.setInt(2, endId)
+                statement.executeUpdate()
+            }
+
+            connection.commit()
+            println("Строки с id от $startId до $endId и связанные данные успешно удалены")
+        } catch (e: Exception) {
+            connection.rollback()
+            throw RuntimeException("Ошибка в удалении строк: ${e.message}", e)
+        } finally {
+            connection.autoCommit = true
+        }
+    }
+
+    override fun getNumOfLearnedWords(): Int {
+        if (currentChatId == null) {
+            println("Ошибка: currentChatId не установлен.")
+            return 0
+        }
+
+        val query = """
+        SELECT COUNT(*)
+        FROM user_answers
         WHERE user_id = (SELECT id FROM users WHERE chat_id = ?)
         AND correct_answer_count >= $learningThreshold;
     """.trimIndent()
 
-            connection.prepareStatement(query).use { statement ->
-                statement.setLong(1, currentChatId!!)
-                statement.executeQuery().use { resultSet ->
-                    if (resultSet.next()) {
-                        return resultSet.getInt(1)
-                    }
+        connection.prepareStatement(query).use { statement ->
+            statement.setLong(1, currentChatId!!)
+            statement.executeQuery().use { resultSet ->
+                if (resultSet.next()) {
+                    return resultSet.getInt(1)
                 }
             }
-            return 0
         }
+        return 0
+    }
 
-        override fun getSize(): Int {
-            connection.createStatement().use { statement ->
-                val resultSet = statement.executeQuery("SELECT COUNT(*) FROM words;")
-                return resultSet.getInt(1)
-            }
+    override fun getSize(): Int {
+        connection.createStatement().use { statement ->
+            val resultSet = statement.executeQuery("SELECT COUNT(*) FROM words;")
+            return resultSet.getInt(1)
         }
+    }
 
-        override fun getLearnedWords(): List<Word> {
-            return getWords(
-                """
+    override fun getLearnedWords(): List<Word> {
+        return getWords(
+            """
              SELECT words.text, words.translate, user_answers.correct_answer_count
                          FROM words
                          JOIN user_answers ON words.id = user_answers.word_id
                          WHERE user_answers.correct_answer_count >= $learningThreshold;
          """.trimIndent()
-            )
-        }
+        )
+    }
 
-        override fun getUnlearnedWords(): List<Word> {
-            return getWords(
-                """
+    override fun getUnlearnedWords(): List<Word> {
+        return getWords(
+            """
              SELECT words.text, words.translate, COALESCE(user_answers.correct_answer_count, 0) AS correct_answer_count
                                       FROM words
                                       LEFT JOIN user_answers ON words.id = user_answers.word_id
                                       WHERE user_answers.correct_answer_count IS NULL OR user_answers.correct_answer_count < $learningThreshold;
         """.trimIndent()
-            )
-        }
+        )
+    }
 
-        override fun setCorrectAnswersCount(word: String, correctAnswersCount: Int) {
-            val chatId = currentChatId ?: throw IllegalStateException("Chat ID не получен")
-            connection.prepareStatement(
-                """
+    override fun setCorrectAnswersCount(word: String, correctAnswersCount: Int) {
+        val chatId = currentChatId ?: throw IllegalStateException("Chat ID не получен")
+        connection.prepareStatement(
+            """
             INSERT OR REPLACE INTO user_answers (user_id, word_id, correct_answer_count, updated_at)
             VALUES (
             (SELECT id FROM users WHERE chat_id = ?),
@@ -193,69 +186,148 @@ interface IUserDictionary {
             CURRENT_TIMESTAMP
             );
   """.trimIndent()
-            ).use { statement ->
-                statement.setLong(1, chatId)
-                statement.setString(2, word)
-                statement.setInt(3, correctAnswersCount)
-                statement.executeUpdate()
-            }
-        }
-
-        private fun getWords(query: String): List<Word> {
-            val words = mutableListOf<Word>()
-            connection.createStatement().use { statement ->
-                statement.executeQuery(query).use { resultSet ->
-                    while (resultSet.next()) {
-                        words.add(
-                            Word(
-                                original = resultSet.getString("text"),
-                                translate = resultSet.getString("translate"),
-                                correctAnswersCount = resultSet.getInt("correct_answer_count")
-                            )
-                        )
-                    }
-                }
-            }
-            return words
-        }
-
-        override fun resetUserProgress() {
-            connection.createStatement().use { statement ->
-                statement.executeUpdate("DELETE FROM user_answers;")
-            }
+        ).use { statement ->
+            statement.setLong(1, chatId)
+            statement.setString(2, word)
+            statement.setInt(3, correctAnswersCount)
+            statement.executeUpdate()
         }
     }
 
+    private fun getWords(query: String): List<Word> {
+        val words = mutableListOf<Word>()
+        connection.createStatement().use { statement ->
+            statement.executeQuery(query).use { resultSet ->
+                while (resultSet.next()) {
+                    words.add(
+                        Word(
+                            original = resultSet.getString("text"),
+                            translate = resultSet.getString("translate"),
+                            correctAnswersCount = resultSet.getInt("correct_answer_count")
+                        )
+                    )
+                }
+            }
+        }
+        return words
+    }
+
+    override fun resetUserProgress() {
+        connection.createStatement().use { statement ->
+            statement.executeUpdate("DELETE FROM user_answers;")
+        }
+    }
+}
 
 fun updateDictionary(wordsFile: File, connection: Connection) {
     synchronized(connection) {
-        val insertStatement = connection.prepareStatement("INSERT OR IGNORE INTO words (text, translate) VALUES (?, ?)")
+        var insertedCount = 0
+        var ignoredCount = 0
+        var errorCount = 0
+        var totalLines = 0
+
+        val insertStatement = connection.prepareStatement(
+            "INSERT OR IGNORE INTO words (text, translate) VALUES (?, ?)"
+        )
+
         connection.autoCommit = false
         try {
             wordsFile.forEachLine { line ->
-                val parts = line.split("|").map { it.trim() }
-                if (parts.size != 2) {
-                    println("Некорректная строка: $line")
+                totalLines++
+                val trimmedLine = line.trim()
+                if (trimmedLine.isEmpty()) {
+                    println("Пустая строка в строке #$totalLines")
                     return@forEachLine
                 }
-                insertStatement.apply {
-                    setString(1, parts[0])
-                    setString(2, parts[1])
-                    addBatch()
+
+                val parts = trimmedLine.split("|").map { it.trim() }
+                if (parts.size != 2) {
+                    println("Некорректный формат в строке #$totalLines: '$trimmedLine'")
+                    errorCount++
+                    return@forEachLine
+                }
+
+                try {
+                    insertStatement.apply {
+                        setString(1, parts[0])
+                        setString(2, parts[1])
+                        addBatch()
+                    }
+                } catch (e: SQLException) {
+                    println("Ошибка при обработке строки #$totalLines: ${e.message}")
+                    errorCount++
                 }
             }
-            insertStatement.executeBatch()
+
+            val batchResults = insertStatement.executeBatch()
+            batchResults.forEach { result ->
+                when (result) {
+                    Statement.SUCCESS_NO_INFO -> insertedCount++
+                    Statement.EXECUTE_FAILED -> errorCount++
+                    else -> if (result > 0) insertedCount++ else ignoredCount++
+                }
+            }
+
             connection.commit()
+            println(
+                """
+                ================================================
+                Обработка файла ${wordsFile.name} завершена!
+                Всего строк: $totalLines
+                Успешно добавлено: $insertedCount
+                Дубликатов пропущено: $ignoredCount
+                Ошибок формата: $errorCount
+                ================================================
+            """.trimIndent()
+            )
+
         } catch (e: Exception) {
             connection.rollback()
-            throw RuntimeException("Ошибка при загрузке словаря: ${e.message}", e)
+            println(
+                """
+                ================================================
+                ОШИБКА! Транзакция откачена!
+                Причина: ${e.message}
+                Добавлено до ошибки: $insertedCount
+                ================================================
+            """.trimIndent()
+            )
+            throw e
         } finally {
             insertStatement.close()
             connection.autoCommit = true
         }
     }
-
 }
+
+fun initializeDatabase(connection: Connection) {
+    connection.createStatement().use { statement ->
+
+        statement.executeUpdate(
+            """
+            CREATE TABLE IF NOT EXISTS words (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                text TEXT NOT NULL UNIQUE,
+                translate TEXT NOT NULL,
+                correctAnswersCount INTEGER DEFAULT 0
+            )
+        """.trimIndent()
+        )
+        statement.executeQuery("SELECT COUNT(*) FROM words;").use { resultSet ->
+            if (resultSet.next() && resultSet.getInt(1) == 0) {
+                println("Таблица words пуста. Загружаю данные из words.txt...")
+                val wordsFile = File("words.txt").takeIf { it.exists() }
+                    ?: throw FileNotFoundException("Файл words.txt не найден")
+
+                updateDictionary(wordsFile, connection)
+                println("Слова из words.txt успешно добавлены в базу")
+
+            }
+        }
+    }
+}
+
+
 
 
 
