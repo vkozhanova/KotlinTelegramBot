@@ -2,7 +2,11 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.io.File
+import java.io.IOException
+import java.sql.Connection
 import java.sql.DriverManager
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 @Serializable
 data class Update(
@@ -21,11 +25,53 @@ data class Response(
 )
 
 @Serializable
+data class GetFileRequest(
+    @SerialName("file_id")
+    val fileId: String,
+)
+
+@Serializable
+data class GetFileResponse(
+    @SerialName("ok")
+    val ok: Boolean,
+    @SerialName("result")
+    val result: TelegramFile? = null,
+)
+
+@Serializable
+data class TelegramFile(
+    @SerialName("file_id")
+    val fileId: String,
+    @SerialName("file_unique_id")
+    val fileUniqueId: String,
+    @SerialName("file_size")
+    val fileSize: Long,
+    @SerialName("file_path")
+    val filePath: String,
+)
+
+@Serializable
+data class Document(
+    @SerialName("file_name")
+    val fileName: String,
+    @SerialName("mime_type")
+    val mimeName: String,
+    @SerialName("file_id")
+    val fileId: String,
+    @SerialName("file_unique_id")
+    val fileUniqueId: String,
+    @SerialName("file_size")
+    val fileSize: Long,
+)
+
+@Serializable
 data class Message(
     @SerialName("text")
     val text: String? = null,
     @SerialName("chat")
     val chat: Chat,
+    @SerialName("document")
+    val document: Document? = null,
 )
 
 @Serializable
@@ -66,13 +112,31 @@ data class InlineKeyBoard(
     val text: String,
 )
 
+private const val TWELVE_HOURS_MILLIS = 12 * 60 * 60 * 1000L // 12 часов в миллисекундах
+private const val MAIN_LOOP_SLEEP_MS = 2000L
+private const val MAX_DELETE_ATTEMPTS = 3
+private const val DOWNLOADS_DIR = "downloads"
+
 fun main(args: Array<String>) {
-    val connection = DriverManager.getConnection("jdbc:sqlite:data.db?busy_timeout=5000")
+    Class.forName("org.sqlite.JDBC")
+    val connection = DriverManager.getConnection("jdbc:sqlite:new_data.db?busy_timeout=5000")
     connection.use {
-        updateDictionary(File("words.txt"), connection)
+        initializeDatabase(connection)
         val dictionary = DatabaseUserDictionary(connection)
+
         val trainer = LearnWordsTrainer(dictionary)
 //        dictionary.deleteWordsAndRelatedDataByIdRange(0, 0)
+
+        val scheduler = Executors.newScheduledThreadPool(1)
+        scheduler.scheduleAtFixedRate({
+            println("Начинаю очистку файлов...")
+            val downloadsDir = File(DOWNLOADS_DIR).apply { mkdirs() }
+            downloadsDir.listFiles()?.forEach { file ->
+                if (file.lastModified() < System.currentTimeMillis() - TWELVE_HOURS_MILLIS) {
+                    deleteFileWithRetry(file)
+                }
+            }
+        }, 0, 1, TimeUnit.HOURS)
 
         val botToken = args[0]
         var lastUpdateId = 0L
@@ -83,23 +147,29 @@ fun main(args: Array<String>) {
         val telegramBotService = TelegramBotService(botToken)
 
         while (true) {
-            Thread.sleep(2000)
-            val responseString: String = telegramBotService.getUpdates(lastUpdateId)
-            println(responseString)
+            Thread.sleep(MAIN_LOOP_SLEEP_MS)
+            try {
+                val responseString = telegramBotService.getUpdates(lastUpdateId)
+                val response: Response = json.decodeFromString(responseString)
 
-            val response: Response = json.decodeFromString(responseString)
-            if (response.result.isEmpty()) continue
-            val sortedUpdates = response.result.sortedBy { it.updateId }
-            sortedUpdates.forEach {
-                handleUpdate(
-                    update = it,
-                    json = json,
-                    telegramBotService = telegramBotService,
-                    trainers = trainers,
-                    dictionary = dictionary,
-                    )
+                if (response.result.isEmpty()) continue
+
+                response.result
+                    .sortedBy { it.updateId }
+                    .forEach { update ->
+                        handleUpdate(
+                            update = update,
+                            json = json,
+                            telegramBotService = telegramBotService,
+                            trainers = trainers,
+                            dictionary = dictionary,
+                            connection = connection
+                        )
+                        lastUpdateId = update.updateId + 1
+                    }
+            } catch (e: Exception) {
+                println("Ошибка обработки обновлений: ${e.message}")
             }
-            lastUpdateId = sortedUpdates.last().updateId + 1
         }
     }
 }
@@ -110,12 +180,14 @@ fun handleUpdate(
     telegramBotService: TelegramBotService,
     trainers: HashMap<Long, LearnWordsTrainer>,
     dictionary: IUserDictionary,
+    connection: Connection,
 ) {
     val message = update.message?.text
     val chatId = update.message?.chat?.id ?: update.callbackQuery?.message?.chat?.id ?: return
     val data = update.callbackQuery?.data
+    println("Обработка обновления для chatId: $chatId, message: $message, data: $data")
 
-    if(dictionary is DatabaseUserDictionary) {
+    if (dictionary is DatabaseUserDictionary) {
         dictionary.setCurrentChatId(chatId)
     }
 
@@ -127,6 +199,29 @@ fun handleUpdate(
     }
 
     val trainer = trainers.getOrPut(chatId) { LearnWordsTrainer(dictionary) }
+
+    update.message?.document?.let { document ->
+        val jsonResponse = telegramBotService.getFile(document.fileId, json)
+        jsonResponse?.let {
+            val response: GetFileResponse = json.decodeFromString(it)
+            response.result?.let { file ->
+                val downloadsDir = File("downloads").apply { mkdirs() }
+                val fileName = "${downloadsDir.absolutePath}/${file.fileUniqueId}_${document.fileName}"
+                telegramBotService.downloadFile(file.filePath, fileName)
+                println("Файл сохранен в: $fileName")
+                try {
+                    val words = File(fileName).bufferedReader().use { it.readLines() }
+                    updateDictionary(File(fileName), connection)
+                    telegramBotService.sendMessage(json, chatId, "Добавлено ${words.size} слов!")
+                } catch (e: Exception) {
+                    telegramBotService.sendMessage(json, chatId, "Ошибка обработки файла: ${e.message}")
+                } finally {
+                    deleteFileWithRetry(File(fileName))
+                }
+
+            }
+        }
+    }
 
     when {
         message?.lowercase() == "hello" -> {
@@ -176,6 +271,24 @@ fun handleUpdate(
             checkNextQuestionAndSend(json, trainer, telegramBotService, chatId)
         }
     }
+}
+
+fun deleteFileWithRetry(file: File, maxAttempts: Int = MAX_DELETE_ATTEMPTS) {
+    var attempts = 0
+    while (attempts < maxAttempts) {
+        try {
+            if (file.delete()) {
+                println("Файл ${file.name} успешно удален")
+                return
+            }
+        } catch (e: IOException) {
+            println("Ошибка удаления (попытка ${attempts + 1}): ${e.message}")
+            Thread.sleep(500)
+        }
+        attempts++
+    }
+    println("Ошибка: не удалось удалить файл после $maxAttempts попыток: ${file.absolutePath}")
+
 }
 
 fun checkNextQuestionAndSend(
