@@ -13,6 +13,7 @@ class Statistics(
 data class Question(
     val variants: List<Word>,
     val correctAnswer: Word,
+    val imageFileId: String? = null
 )
 
 const val PERCENT_MULTIPLIER = 100

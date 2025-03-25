@@ -19,6 +19,18 @@ data class Update(
 )
 
 @Serializable
+data class EditMessageTextRequest(
+    @SerialName("chat_id")
+    val chatId: Long,
+    @SerialName("message_id")
+    val messageId: Long,
+    @SerialName("text")
+    val text: String,
+    @SerialName("reply_markup")
+    val replyMarkup: ReplyMarkup? = null,
+)
+
+@Serializable
 data class Response(
     @SerialName("result")
     val result: List<Update>,
@@ -66,6 +78,8 @@ data class Document(
 
 @Serializable
 data class Message(
+    @SerialName("message_id")
+    val messageId: Long,
     @SerialName("text")
     val text: String? = null,
     @SerialName("chat")
@@ -96,6 +110,22 @@ data class SendMessageRequest(
     val text: String,
     @SerialName("reply_markup")
     val replyMarkup: ReplyMarkup? = null,
+)
+
+@Serializable
+data class SentMessage(
+    @SerialName("message_id")
+    val messageId: Long,
+    @SerialName("chat")
+    val chat: Chat,
+)
+
+@Serializable
+data class SendMessageResponse(
+    @SerialName("ok")
+    val ok: Boolean,
+    @SerialName("result")
+    val result: SentMessage? = null
 )
 
 @Serializable
@@ -258,20 +288,33 @@ fun handleUpdate(
         data?.startsWith(CALLBACK_DATA_ANSWER_PREFIX) == true -> {
             val userAnswerIndex = data.substringAfter(CALLBACK_DATA_ANSWER_PREFIX).toIntOrNull()
             val isCorrect = trainer.checkAnswer(userAnswerIndex)
-            if (isCorrect) {
-                telegramBotService.sendMessage(json, chatId, "Правильно!")
+            val chatId = update.callbackQuery.message?.chat?.id ?: return
+            val messageId = update.callbackQuery.message.messageId ?: return
+
+            val responseText = if (isCorrect) {
+                "✅ Правильно! Следующий вопрос:"
             } else {
                 val correctAnswer = trainer.question?.correctAnswer
-                telegramBotService.sendMessage(
-                    json,
-                    chatId,
-                    "Неправильно! ${correctAnswer?.original} - это ${correctAnswer?.translate}"
-                )
+                "❌ Неправильно! ${correctAnswer?.original} - это ${correctAnswer?.translate}. Следующий вопрос:"
             }
-            checkNextQuestionAndSend(json, trainer, telegramBotService, chatId)
+            telegramBotService.editMessage(
+                json = json,
+                chatId = chatId,
+                messageId = messageId,
+                text = responseText
+            )
+            Thread.sleep(2000)
+            checkNextQuestionAndSend(
+                json = json,
+                trainer = trainer,
+                telegramBotService = telegramBotService,
+                chatId = chatId,
+                editMessageId = messageId,
+            )
         }
     }
 }
+
 
 fun deleteFileWithRetry(file: File, maxAttempts: Int = MAX_DELETE_ATTEMPTS) {
     var attempts = 0
@@ -295,13 +338,19 @@ fun checkNextQuestionAndSend(
     json: Json,
     trainer: LearnWordsTrainer,
     telegramBotService: TelegramBotService,
-    chatId: Long
+    chatId: Long,
+    editMessageId: Long? = null
 ) {
     val nextQuestion = trainer.getNextQuestion()
     if (nextQuestion == null) {
         telegramBotService.sendMessage(json, chatId, "Все слова в словаре выучены.")
     } else {
-        telegramBotService.sendQuestion(json, chatId, nextQuestion)
+        telegramBotService.sendQuestion(
+            json = json,
+            chatId = chatId,
+            question = nextQuestion,
+            editMessageId = editMessageId
+        )
     }
 }
 

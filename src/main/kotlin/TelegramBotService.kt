@@ -17,8 +17,10 @@ const val RESET_BUTTON = "reset_clicked"
 class TelegramBotService(private val botToken: String) {
 
     private val client = HttpClient.newBuilder()
-        .version(HttpClient.Version.HTTP_1_1) // Используем HTTP/1.1
+        .version(HttpClient.Version.HTTP_1_1)
         .build()
+
+    private val lastMessageIds = mutableMapOf<Long, Long>()
 
     fun getUpdates(updateId: Long): String {
 
@@ -36,29 +38,34 @@ class TelegramBotService(private val botToken: String) {
         }
     }
 
-    fun sendMessage(json: Json, chatId: Long, message: String): String {
+    fun sendMessage(json: Json, chatId: Long, message: String): String? {
 
         val sendMessage = "$BASE_URL$botToken/sendMessage"
         val requestBody = SendMessageRequest(
             chatId = chatId,
             text = message,
         )
-        val requestBodyString = json.encodeToString(requestBody)
-        val request: HttpRequest = HttpRequest.newBuilder().uri(URI.create(sendMessage))
-            .header("Content-type", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString(requestBodyString))
-            .build()
 
         return try {
-            println("Отправка сообщения: $message")
+            val requestBodyString = json.encodeToString(requestBody)
+            val request: HttpRequest = HttpRequest.newBuilder().uri(URI.create(sendMessage))
+                .header("Content-type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(requestBodyString))
+                .build()
             val response: HttpResponse<String> = client.send(request, HttpResponse.BodyHandlers.ofString())
-            response.body()
-        } catch (e: IOException) {
+            val responseBody = response.body()
+
+            json.decodeFromString<SendMessageResponse>(responseBody).result?.let {
+                lastMessageIds[chatId] = it.messageId
+            }
+
+            responseBody
+        } catch (e: Exception) {
             println("Ошибка при отправки сообщения: ${e.message}")
-            Thread.sleep(5000)
-            sendMessage(json, chatId, message)
+            null
         }
     }
+
 
     fun sendMenu(json: Json, chatId: Long): String {
         val sendMessage = "$BASE_URL$botToken/sendMessage"
@@ -94,7 +101,7 @@ class TelegramBotService(private val botToken: String) {
         }
     }
 
-    fun sendQuestion(json: Json, chatId: Long, question: Question): String? {
+    fun sendQuestion(json: Json, chatId: Long, question: Question, editMessageId: Long? = null): String? {
         val buttonsInColumn = question.variants.mapIndexed { index, word ->
             listOf(
                 InlineKeyBoard(
@@ -104,27 +111,51 @@ class TelegramBotService(private val botToken: String) {
             )
         }
 
+        return if (editMessageId != null) {
+            editMessage(
+                json = json,
+                chatId = chatId,
+                messageId = editMessageId,
+                text = question.correctAnswer.original,
+                replyMarkup = ReplyMarkup(buttonsInColumn)
+            ).also {
+                lastMessageIds[chatId] = editMessageId
+            }
+        } else {
+            val response = sendNewMessageWithQuestion(json, chatId, question)
+            json.decodeFromString<SendMessageResponse>(response).result?.messageId?.let {
+                lastMessageIds[chatId] = it
+            }
+            response
+        }
+    }
+
+    private fun sendNewMessageWithQuestion(
+        json: Json,
+        chatId: Long,
+        question: Question
+    ): String {
+        val buttons = question.variants.mapIndexed { index, word ->
+            listOf(InlineKeyBoard(
+                text = word.translate,
+                callbackData = "$CALLBACK_DATA_ANSWER_PREFIX$index"
+            ))
+        }
+
         val requestBody = SendMessageRequest(
             chatId = chatId,
             text = question.correctAnswer.original,
-            replyMarkup = ReplyMarkup(buttonsInColumn)
+            replyMarkup = ReplyMarkup(buttons)
         )
 
         val requestBodyString = json.encodeToString(requestBody)
-        val request: HttpRequest = HttpRequest.newBuilder()
+        val request = HttpRequest.newBuilder()
             .uri(URI.create("$BASE_URL$botToken/sendMessage"))
-            .header("Content-type", "application/json")
+            .header("Content-Type", "application/json")
             .POST(HttpRequest.BodyPublishers.ofString(requestBodyString))
             .build()
 
-        return try {
-            println("Отправка запроса")
-            client.send(request, HttpResponse.BodyHandlers.ofString()).body()
-        } catch (e: IOException) {
-            println("Ошибка при отправке вопроса: ${e.message}")
-            Thread.sleep(5000)
-            sendQuestion(json, chatId, question)
-        }
+        return client.send(request, HttpResponse.BodyHandlers.ofString()).body()
     }
 
     fun getFile(fileId: String, json: Json): String? {
@@ -169,5 +200,35 @@ class TelegramBotService(private val botToken: String) {
         body.copyTo(File(fileName).outputStream(), 16 * 1024)
         println("Файл успешно скачан: $fileName")
 
+    }
+
+   fun editMessage(
+        json: Json,
+        chatId: Long,
+        messageId: Long,
+        text: String,
+        replyMarkup: ReplyMarkup? = null
+    ): String? {
+
+        val url = "$BASE_URL$botToken/editMessageText"
+        val requestBody = EditMessageTextRequest(chatId, messageId, text, replyMarkup)
+        val requestBodyString = json.encodeToString(requestBody)
+
+        val request = HttpRequest.newBuilder()
+            .uri(URI.create(url))
+            .header("Content-Type", "application/json")
+            .POST(HttpRequest.BodyPublishers.ofString(requestBodyString))
+            .build()
+
+        return try {
+            val response = client.send(request, HttpResponse.BodyHandlers.ofString())
+            response.body()
+        } catch (e: IOException) {
+            println("Ошибка при редактировании сообщения: ${e.message}")
+            null
+        } catch (e: InterruptedException) {
+            println("Прервано редактирование сообщения: ${e.message}")
+            null
+        }
     }
 }
