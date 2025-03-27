@@ -33,19 +33,17 @@ class DatabaseUserDictionary(
     private fun createTableIfNotExists(connection: Connection) {
         connection.autoCommit = false
         try {
-            connection.createStatement().use { statement ->
-                statement.executeUpdate(
-                    """
+            val createUserTable = """
                     CREATE TABLE IF NOT EXISTS users (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    username VARCHAR,
+                    username VARCHAR (100) NOT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     chat_id INTEGER UNIQUE NOT NULL
-                    );
+                    )
                     """.trimIndent()
-                )
-                statement.executeUpdate(
-                    """
+            connection.prepareStatement(createUserTable).use { it.executeUpdate() }
+
+            val createAnswersTable = """
                     CREATE TABLE IF NOT EXISTS user_answers (
                     user_id INTEGER,
                     word_id INTEGER,
@@ -54,10 +52,10 @@ class DatabaseUserDictionary(
                     PRIMARY KEY (user_id, word_id),
                     FOREIGN KEY (user_id) REFERENCES users(id),
                     FOREIGN KEY (word_id) REFERENCES words(id)
-                    );
+                    )
                 """.trimIndent()
-                )
-            }
+            connection.prepareStatement(createAnswersTable).use { it.executeUpdate() }
+
             connection.commit()
             println("Транзакция успешно завершена.")
         } catch (e: Exception) {
@@ -146,9 +144,12 @@ class DatabaseUserDictionary(
     }
 
     override fun getSize(): Int {
-        connection.createStatement().use { statement ->
-            val resultSet = statement.executeQuery("SELECT COUNT(*) FROM words;")
-            return resultSet.getInt(1)
+        val query = "SELECT COUNT(*) FROM words"
+        connection.prepareStatement(query).use { statement ->
+            statement.executeQuery().use { resultSet ->
+                return if (resultSet.next()) resultSet.getInt(1) else 0
+            }
+
         }
     }
 
@@ -158,8 +159,9 @@ class DatabaseUserDictionary(
              SELECT words.text, words.translate, user_answers.correct_answer_count
                          FROM words
                          JOIN user_answers ON words.id = user_answers.word_id
-                         WHERE user_answers.correct_answer_count >= $learningThreshold;
-         """.trimIndent()
+                         WHERE user_answers.correct_answer_count >= ?
+         """.trimIndent(),
+            learningThreshold
         )
     }
 
@@ -169,8 +171,9 @@ class DatabaseUserDictionary(
              SELECT words.text, words.translate, COALESCE(user_answers.correct_answer_count, 0) AS correct_answer_count
                                       FROM words
                                       LEFT JOIN user_answers ON words.id = user_answers.word_id
-                                      WHERE user_answers.correct_answer_count IS NULL OR user_answers.correct_answer_count < $learningThreshold;
-        """.trimIndent()
+                                      WHERE user_answers.correct_answer_count IS NULL OR user_answers.correct_answer_count < ?
+        """.trimIndent(),
+            learningThreshold
         )
     }
 
@@ -194,10 +197,18 @@ class DatabaseUserDictionary(
         }
     }
 
-    private fun getWords(query: String): List<Word> {
+    private fun getWords(query: String, vararg params: Any): List<Word> {
         val words = mutableListOf<Word>()
-        connection.createStatement().use { statement ->
-            statement.executeQuery(query).use { resultSet ->
+        connection.prepareStatement(query).use { statement ->
+            params.forEachIndexed { index, value ->
+                when (value) {
+                    is Int -> statement.setInt(index + 1, value)
+                    is Long -> statement.setLong(index + 1, value)
+                    is String -> statement.setString(index + 1, value)
+
+                }
+            }
+            statement.executeQuery().use { resultSet ->
                 while (resultSet.next()) {
                     words.add(
                         Word(
@@ -213,13 +224,22 @@ class DatabaseUserDictionary(
     }
 
     override fun resetUserProgress() {
-        connection.createStatement().use { statement ->
-            statement.executeUpdate("DELETE FROM user_answers;")
+        val query = "DELETE FROM user_answers"
+        connection.prepareStatement(query).use { statement ->
+            statement.executeUpdate()
         }
     }
 }
 
 fun updateDictionary(wordsFile: File, connection: Connection) {
+    fun isValidWord(original: String, translate: String): Boolean {
+        val regex = Regex("^[\\p{L} .'-]+\$", RegexOption.IGNORE_CASE)
+        return original.matches(regex) &&
+                translate.matches(regex) &&
+                original.length <= 100 &&
+                translate.length <= 100
+    }
+
     synchronized(connection) {
         var insertedCount = 0
         var ignoredCount = 0
@@ -241,7 +261,7 @@ fun updateDictionary(wordsFile: File, connection: Connection) {
                 }
 
                 val parts = trimmedLine.split("|").map { it.trim() }
-                if (parts.size != 2) {
+                if (parts.size != 2 || !isValidWord(parts[0], parts[1])) {
                     println("Некорректный формат в строке #$totalLines: '$trimmedLine'")
                     errorCount++
                     return@forEachLine
@@ -301,19 +321,21 @@ fun updateDictionary(wordsFile: File, connection: Connection) {
 }
 
 fun initializeDatabase(connection: Connection) {
-    connection.createStatement().use { statement ->
-
-        statement.executeUpdate(
-            """
+    val createWordsTable = """
             CREATE TABLE IF NOT EXISTS words (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                text TEXT NOT NULL UNIQUE,
-                translate TEXT NOT NULL,
+                text VARCHAR (100) NOT NULL UNIQUE,
+                translate VARCHAR (100) NOT NULL,
                 correctAnswersCount INTEGER DEFAULT 0
             )
         """.trimIndent()
-        )
-        statement.executeQuery("SELECT COUNT(*) FROM words;").use { resultSet ->
+    connection.prepareStatement(createWordsTable).use { statement ->
+        statement.executeUpdate()
+    }
+
+    connection.prepareStatement("SELECT COUNT(*) FROM words").use { statement ->
+        statement.executeQuery().use { resultSet ->
+
             if (resultSet.next() && resultSet.getInt(1) == 0) {
                 println("Таблица words пуста. Загружаю данные из words.txt...")
                 val wordsFile = File("words.txt").takeIf { it.exists() }
@@ -323,9 +345,11 @@ fun initializeDatabase(connection: Connection) {
                 println("Слова из words.txt успешно добавлены в базу")
 
             }
+
         }
     }
 }
+
 
 
 
