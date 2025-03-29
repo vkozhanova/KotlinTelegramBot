@@ -12,6 +12,8 @@ interface IUserDictionary {
     fun getUnlearnedWords(): List<Word>
     fun setCorrectAnswersCount(word: String, correctAnswersCount: Int)
     fun resetUserProgress()
+    fun getStickerThreshold(chatId: Long): Int
+    fun updateStickerThreshold(chatId: Long, newThreshold: Int)
 }
 
 class DatabaseUserDictionary(
@@ -33,15 +35,37 @@ class DatabaseUserDictionary(
     private fun createTableIfNotExists(connection: Connection) {
         connection.autoCommit = false
         try {
+
             val createUserTable = """
                     CREATE TABLE IF NOT EXISTS users (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     username VARCHAR (100) NOT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    chat_id INTEGER UNIQUE NOT NULL
+                    chat_id INTEGER UNIQUE NOT NULL,
+                    sticker_threshold INTEGER DEFAULT 0
                     )
                     """.trimIndent()
             connection.prepareStatement(createUserTable).use { it.executeUpdate() }
+
+            val checkColumnQuery = """
+                PRAGMA table_info(users)
+            """.trimIndent()
+            var hasStickerThreshold = false
+            connection.prepareStatement(checkColumnQuery).use { statement ->
+                val resultSet = statement.executeQuery()
+                while (resultSet.next()) {
+                    if (resultSet.getString("name") == "sticker_threshold") {
+                        hasStickerThreshold = true
+                    }
+                }
+            }
+
+            if (!hasStickerThreshold) {
+                val alterQuery = """
+                ALTER TABLE users ADD COLUMN sticker_threshold INTEGER DEFAULT 0
+            """.trimIndent()
+                connection.prepareStatement(alterQuery).executeUpdate()
+            }
 
             val createAnswersTable = """
                     CREATE TABLE IF NOT EXISTS user_answers (
@@ -229,6 +253,25 @@ class DatabaseUserDictionary(
             statement.executeUpdate()
         }
     }
+
+    override fun getStickerThreshold(chatId: Long): Int {
+        val query = "SELECT sticker_threshold FROM users WHERE chat_id = ?"
+        connection.prepareStatement(query).use { statement ->
+            statement.setLong(1, chatId)
+            val resultSet = statement.executeQuery()
+            return if (resultSet.next()) resultSet.getInt("sticker_threshold") else 0
+
+        }
+    }
+
+    override fun updateStickerThreshold(chatId: Long, newThreshold: Int) {
+        val query = "UPDATE users SET sticker_threshold = ? WHERE chat_id = ?"
+        connection.prepareStatement(query).use { statement ->
+            statement.setInt(1, newThreshold)
+            statement.setLong(2, chatId)
+            statement.executeUpdate()
+        }
+    }
 }
 
 fun updateDictionary(wordsFile: File, connection: Connection) {
@@ -349,13 +392,3 @@ fun initializeDatabase(connection: Connection) {
         }
     }
 }
-
-
-
-
-
-
-
-
-
-

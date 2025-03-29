@@ -18,6 +18,7 @@ data class Update(
     val callbackQuery: CallbackQuery? = null,
 )
 
+
 @Serializable
 data class EditMessageTextRequest(
     @SerialName("chat_id")
@@ -142,10 +143,17 @@ data class InlineKeyBoard(
     val text: String,
 )
 
+@Serializable
+data class SendStickerRequest(
+    @SerialName("chat_id") val chatId: Long,
+    @SerialName("sticker") val sticker: String
+)
+
 private const val TWELVE_HOURS_MILLIS = 12 * 60 * 60 * 1000L // 12 часов в миллисекундах
 private const val MAIN_LOOP_SLEEP_MS = 2000L
 private const val MAX_DELETE_ATTEMPTS = 3
 private const val DOWNLOADS_DIR = "downloads"
+private const val STICKER_COUNT = 1
 
 fun main(args: Array<String>) {
     Class.forName("org.sqlite.JDBC")
@@ -292,17 +300,39 @@ fun handleUpdate(
             val messageId = update.callbackQuery.message.messageId ?: return
 
             val responseText = if (isCorrect) {
-                "✅ Правильно! Следующий вопрос:"
+                "✅ Правильно!"
             } else {
                 val correctAnswer = trainer.question?.correctAnswer
-                "❌ Неправильно! ${correctAnswer?.original} - это ${correctAnswer?.translate}. Следующий вопрос:"
+                "❌ Неправильно! ${correctAnswer?.original} - это ${correctAnswer?.translate}."
             }
+
             telegramBotService.editMessage(
                 json = json,
                 chatId = chatId,
                 messageId = messageId,
                 text = responseText
             )
+
+            if (isCorrect) {
+                val statistics = trainer.getStatistics()
+                val currentThreshold = dictionary.getStickerThreshold(chatId)
+                if (statistics.learnedCount >= currentThreshold + STICKER_COUNT) {
+                    val newThreshold = currentThreshold + STICKER_COUNT
+                    dictionary.updateStickerThreshold(chatId, newThreshold)
+
+                    telegramBotService.sendSticker(json, chatId)
+                    telegramBotService.sendMessage(json, chatId, "Поздравляю! Вы выучили новое слово!")
+
+                    Thread.sleep(1500)
+                    checkNextQuestionAndSend(
+                        json = json,
+                        trainer = trainer,
+                        telegramBotService = telegramBotService,
+                        chatId = chatId,
+                    )
+                    return
+                }
+            }
             Thread.sleep(2000)
             checkNextQuestionAndSend(
                 json = json,
@@ -314,7 +344,6 @@ fun handleUpdate(
         }
     }
 }
-
 
 fun deleteFileWithRetry(file: File, maxAttempts: Int = MAX_DELETE_ATTEMPTS) {
     var attempts = 0
