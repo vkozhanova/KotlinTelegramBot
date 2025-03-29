@@ -22,6 +22,48 @@ class TelegramBotService(private val botToken: String) {
 
     private val lastMessageIds = mutableMapOf<Long, Long>()
 
+
+    fun sendSticker(json: Json, chatId: Long): String? {
+        val stickerIds = listOf(
+            "CAACAgIAAxkBAAEN5qFnvkJsTvE6oG8pnt6DksPjQXxvpAACNQADrWW8FPWlcVzFMOXgNgQ",
+            "CAACAgIAAxkBAAEOLR1n5tj0_Yoh1Vzm9Q2FWw7Bh7LwXQACmwADO2AkFOBQ1OzxDlN9NgQ",
+            "CAACAgIAAxkBAAEOLR9n5tkqIDrzjRhOYPSoV-7MEfaPhgACHQADwDZPE17YptxBPd5INgQ",
+            "CAACAgIAAxkBAAEOLSFn5tpM8tPteR0uIEU9G0r5omJbOwACTgADrWW8FCFszl8rK9s8NgQ",
+            "CAACAgIAAxkBAAEN5pFnvkJIBazom_GqZC8J7FhU-uGCIQACKQADJHFiGiKockiM5SMwNgQ",
+            "CAACAgIAAxkBAAEOLSVn5trCTbVoW-sMwYX6CDHn7dCz6gAC9wAD9wLID9CX3j-K0TwONgQ",
+            "CAACAgIAAxkBAAEOLSdn5tvN5hwjcZzo-xqX2vLI9JyCVgACQAEAAlKJkSM2vVjaS6yQ6DYE",
+            "CAACAgIAAxkBAAEOLSln5tvvC9LvXZfol_SXtiHcBOUGqgACDwMAArrAlQVTx-VZjNIcsjYE",
+            "CAACAgIAAxkBAAEOLS5n5tyIWWEwr79l4f-ibS-7i3WmtgAC5gUAAj-VzAoNpAABeLxMTco2BA",
+            "CAACAgIAAxkBAAEOLTBn5t0EdA7FlkuYZ8HYRnADGfNHUQAC3BEAAtfmiUprmtcmqgFCFDYE",
+            "CAACAgIAAxkBAAEOLTJn5t0mvOczpLwEucpe8fUTBFHOyAACIBQAAlqGcUn4IS5DiFwyKTYE",
+            "CAACAgIAAxkBAAEOLTRn5t1nEzX61-U-101EsdBbCLCcQAAC0zEAAvG5cUrosxy_mrtczjYE",
+            "CAACAgIAAxkBAAEOLTZn5t2Kq_XdY997-cUC9qozU5nqIwACShIAAidQAUqpgnF_W9HvnDYE",
+            "CAACAgIAAxkBAAEOLThn5t34dCZSGGygYI9OlnbwK6qUhAACmQUAAj-VzArz4mcjdKvvczYE",
+            "CAACAgIAAxkBAAEOLTpn5t4jgFtie983E3wCsuI1K72DTwACDxUAAhcU0EkmuyEN8xzCCTYE",
+        )
+
+        val sticker = stickerIds.random()
+
+        val url = "$BASE_URL$botToken/sendSticker"
+
+        return try {
+            val requestBody = SendStickerRequest(
+                chatId = chatId,
+                sticker = sticker
+            )
+            val request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(json.encodeToString(requestBody)))
+                .build()
+
+            client.send(request, HttpResponse.BodyHandlers.ofString()).body()
+        } catch (e: Exception) {
+            println("Ошибка отправки стикера: ${e.message}")
+            null
+        }
+    }
+
     fun getUpdates(updateId: Long): String {
 
         val urlGetUpdates = "$BASE_URL$botToken/getUpdates?offset=$updateId"
