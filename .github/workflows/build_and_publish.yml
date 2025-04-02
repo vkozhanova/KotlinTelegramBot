@@ -24,11 +24,14 @@ jobs:
           chmod +x gradlew
           ./gradlew shadowJar
 
+      - name: Check JAR exists
+        run: ls -la build/libs/
+
       - name: Prepare files
         run: |
-          mv build/libs/KotlinTelegramBot-1.0-SNAPSHOT-all.jar bot.jar
+          cp build/libs/KotlinTelegramBot-1.0-SNAPSHOT-all.jar bot.jar
           
-      - name: Check files
+      - name: Check files before SCP
         run: |
           ls -la  bot.jar words.txt
 
@@ -38,8 +41,9 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
-          source: "bot.jar words.txt"
+          source: "bot.jar,words.txt"
           target: "/opt/english_bot/"
+          debug: true
 
 
       - name: Set permissions
