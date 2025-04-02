@@ -27,7 +27,7 @@ jobs:
       - name: Prepare files
         run: |
           mv build/libs/KotlinTelegramBot-1.0-SNAPSHOT-all.jar bot.jar
-          cp src/words.txt words.txt
+          cp words.txt words.txt
 
       - name: Deploy JAR + words.txt
         uses: appleboy/scp-action@master
