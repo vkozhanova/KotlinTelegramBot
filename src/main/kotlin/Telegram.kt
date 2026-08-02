@@ -149,13 +149,23 @@ data class SendStickerRequest(
     @SerialName("sticker") val sticker: String
 )
 
-private const val TWELVE_HOURS_MILLIS = 12 * 60 * 60 * 1000L // 12 часов в миллисекундах
+private const val TWELVE_HOURS_MILLIS = 12 * 60 * 60 * 1000L
 private const val MAIN_LOOP_SLEEP_MS = 2000L
 private const val MAX_DELETE_ATTEMPTS = 3
 private const val DOWNLOADS_DIR = "downloads"
 private const val STICKER_COUNT = 1
 
 fun main(args: Array<String>) {
+    var botToken = if (args.isNotEmpty()) args[0] else null
+    if (botToken == null) {
+        print("Введите токен бота: ")
+        botToken = readlnOrNull()
+        if (botToken.isNullOrBlank()) {
+            println("Токен не введён. Завершение.")
+            return
+        }
+    }
+
     Class.forName("org.sqlite.JDBC")
     val connection = DriverManager.getConnection("jdbc:sqlite:new_data.db?busy_timeout=5000")
     connection.use {
@@ -176,7 +186,7 @@ fun main(args: Array<String>) {
             }
         }, 0, 1, TimeUnit.HOURS)
 
-        val botToken = args[0]
+//        val botToken = args[0]
         var lastUpdateId = 0L
 
         val json = Json { ignoreUnknownKeys = true }
@@ -382,4 +392,3 @@ fun checkNextQuestionAndSend(
         )
     }
 }
-
