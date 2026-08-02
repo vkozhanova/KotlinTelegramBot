@@ -35,16 +35,14 @@ class DatabaseUserDictionary(
     private fun createTableIfNotExists(connection: Connection) {
         connection.autoCommit = false
         try {
-
             val createUserTable = """
-                    CREATE TABLE IF NOT EXISTS users (
+                CREATE TABLE IF NOT EXISTS users (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    username VARCHAR (100) NOT NULL,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     chat_id INTEGER UNIQUE NOT NULL,
-                    sticker_threshold INTEGER DEFAULT 0
-                    )
-                    """.trimIndent()
+                    sticker_threshold INTEGER DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """.trimIndent()
             connection.prepareStatement(createUserTable).use { it.executeUpdate() }
 
             val checkColumnQuery = """
@@ -145,26 +143,21 @@ class DatabaseUserDictionary(
 
     override fun getNumOfLearnedWords(): Int {
         if (currentChatId == null) {
-            println("Ошибка: currentChatId не установлен.")
             return 0
         }
-
         val query = """
-        SELECT COUNT(*)
-        FROM user_answers
-        WHERE user_id = (SELECT id FROM users WHERE chat_id = ?)
-        AND correct_answer_count >= $learningThreshold;
-    """.trimIndent()
-
-        connection.prepareStatement(query).use { statement ->
-            statement.setLong(1, currentChatId!!)
-            statement.executeQuery().use { resultSet ->
-                if (resultSet.next()) {
-                    return resultSet.getInt(1)
-                }
+            SELECT COUNT(*)
+            FROM user_answers
+            WHERE user_id = (SELECT id FROM users WHERE chat_id = ?)
+              AND correct_answer_count >= $learningThreshold
+        """.trimIndent()
+        connection.prepareStatement(query).use { stmt ->
+            stmt.setLong(1, currentChatId!!)
+            stmt.executeQuery().use { rs ->
+                val count = if (rs.next()) rs.getInt(1) else 0
+                return count
             }
         }
-        return 0
     }
 
     override fun getSize(): Int {
@@ -180,44 +173,86 @@ class DatabaseUserDictionary(
     override fun getLearnedWords(): List<Word> {
         return getWords(
             """
-             SELECT words.text, words.translate, user_answers.correct_answer_count
-                         FROM words
-                         JOIN user_answers ON words.id = user_answers.word_id
-                         WHERE user_answers.correct_answer_count >= ?
-         """.trimIndent(),
+                SELECT words.text, words.translate, user_answers.correct_answer_count
+                FROM words
+                JOIN user_answers ON words.id = user_answers.word_id
+                WHERE user_answers.correct_answer_count >= ?
+            """.trimIndent(),
             learningThreshold
         )
     }
 
     override fun getUnlearnedWords(): List<Word> {
-        return getWords(
-            """
-             SELECT words.text, words.translate, COALESCE(user_answers.correct_answer_count, 0) AS correct_answer_count
-                                      FROM words
-                                      LEFT JOIN user_answers ON words.id = user_answers.word_id
-                                      WHERE user_answers.correct_answer_count IS NULL OR user_answers.correct_answer_count < ?
-        """.trimIndent(),
-            learningThreshold
-        )
+        if (currentChatId == null) return emptyList()
+        val chatId = currentChatId!!
+        val query = """
+            SELECT words.text, words.translate, COALESCE(user_answers.correct_answer_count, 0) AS correct_answer_count
+            FROM words
+            LEFT JOIN user_answers
+                ON words.id = user_answers.word_id
+                AND user_answers.user_id = (SELECT id FROM users WHERE chat_id = ?)
+            WHERE user_answers.correct_answer_count IS NULL
+               OR user_answers.correct_answer_count < $learningThreshold
+        """.trimIndent()
+        val words = getWords(query, chatId)
+        return words
     }
 
     override fun setCorrectAnswersCount(word: String, correctAnswersCount: Int) {
         val chatId = currentChatId ?: throw IllegalStateException("Chat ID не получен")
-        connection.prepareStatement(
-            """
-            INSERT OR REPLACE INTO user_answers (user_id, word_id, correct_answer_count, updated_at)
-            VALUES (
-            (SELECT id FROM users WHERE chat_id = ?),
-            (SELECT id FROM words WHERE text = ?),
-            ?,
-            CURRENT_TIMESTAMP
-            );
-  """.trimIndent()
-        ).use { statement ->
+
+        val userId = connection.prepareStatement("SELECT id FROM users WHERE chat_id = ?").use { statement ->
             statement.setLong(1, chatId)
-            statement.setString(2, word)
-            statement.setInt(3, correctAnswersCount)
-            statement.executeUpdate()
+            statement.executeQuery().use { resultSet ->
+                if (resultSet.next()) {
+                    val id = resultSet.getLong(1)
+                    id
+                } else null
+            }
+        } ?: throw IllegalStateException("Пользователь не найден chatId=$chatId")
+
+        val wordId = connection.prepareStatement("SELECT id FROM words WHERE text = ?").use { statement ->
+            statement.setString(1, word)
+            statement.executeQuery().use { resultSet ->
+                if (resultSet.next()) {
+                    val id = resultSet.getLong(1)
+                    println("   wordId = $id")
+                    id
+                } else null
+            }
+        } ?: throw IllegalStateException("Слово не найдено: $word")
+
+        val existingCount = connection.prepareStatement(
+            "SELECT correct_answer_count FROM user_answers WHERE user_id = ? AND word_id = ?"
+        ).use { statement ->
+            statement.setLong(1, userId)
+            statement.setLong(2, wordId)
+            statement.executeQuery().use { resultSet ->
+                if (resultSet.next()) resultSet.getInt(1) else null
+            }
+        }
+        println("   existingCount = $existingCount")
+
+        if (existingCount == null) {
+            val insertQuery = """
+            INSERT INTO user_answers (user_id, word_id, correct_answer_count, updated_at)
+            VALUES (?, ?, 1, CURRENT_TIMESTAMP)
+        """.trimIndent()
+            connection.prepareStatement(insertQuery).use { statement ->
+                statement.setLong(1, userId)
+                statement.setLong(2, wordId)
+            }
+        } else {
+            val updateQuery = """
+            UPDATE user_answers
+            SET correct_answer_count = correct_answer_count + 1,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE user_id = ? AND word_id = ?
+        """.trimIndent()
+            connection.prepareStatement(updateQuery).use { statement ->
+                statement.setLong(1, userId)
+                statement.setLong(2, wordId)
+            }
         }
     }
 
@@ -229,7 +264,6 @@ class DatabaseUserDictionary(
                     is Int -> statement.setInt(index + 1, value)
                     is Long -> statement.setLong(index + 1, value)
                     is String -> statement.setString(index + 1, value)
-
                 }
             }
             statement.executeQuery().use { resultSet ->
@@ -386,9 +420,7 @@ fun initializeDatabase(connection: Connection) {
 
                 updateDictionary(wordsFile, connection)
                 println("Слова из words.txt успешно добавлены в базу")
-
             }
-
         }
     }
 }

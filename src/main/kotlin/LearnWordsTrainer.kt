@@ -39,20 +39,22 @@ class LearnWordsTrainer(
     fun getNextQuestion(): Question? {
         val notLearnedList = userDictionary.getUnlearnedWords()
         if (notLearnedList.isEmpty()) return null
-        val questionWords = if (notLearnedList.size < countOfQuestionWords) {
+
+        val selectedNotLearned = notLearnedList.shuffled().take(countOfQuestionWords)
+        val variants = if (selectedNotLearned.size < countOfQuestionWords) {
             val learnedList = userDictionary.getLearnedWords().shuffled()
-            if (learnedList.isEmpty() && notLearnedList.size < countOfQuestionWords) {
+            if (learnedList.isEmpty() && selectedNotLearned.size < countOfQuestionWords) {
                 return null
             }
-            notLearnedList.shuffled().take(countOfQuestionWords) +
-                    learnedList.take(countOfQuestionWords - notLearnedList.size)
+            selectedNotLearned + learnedList.take(countOfQuestionWords - selectedNotLearned.size)
         } else {
-            notLearnedList.shuffled().take(countOfQuestionWords)
+            selectedNotLearned
         }.shuffled()
 
-        val correctAnswer = questionWords.random()
+        val correctAnswer = selectedNotLearned.random()
+
         question = Question(
-            variants = questionWords,
+            variants = variants,
             correctAnswer = correctAnswer,
         )
         return question
@@ -77,7 +79,3 @@ class LearnWordsTrainer(
         userDictionary.resetUserProgress()
     }
 }
-
-
-
-
